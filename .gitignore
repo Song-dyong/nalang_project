@@ -1,0 +1,12 @@
+# 공통 Python 설정
+__pycache__/
+*.py[cod]
+
+# 모든 하위 프로젝트의 venv 무시
+**/venv/
+
+# VSCode 설정 무시
+.vscode/
+
+# 환경변수 파일 무시
+.env
