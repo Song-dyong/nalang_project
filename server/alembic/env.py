@@ -9,8 +9,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from app.common.db import Base
-from app.user.models import User
+from app.common.base_class import Base
 
 target_metadata = Base.metadata
 # this is the Alembic Config object, which provides
