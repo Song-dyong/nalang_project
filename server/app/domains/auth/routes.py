@@ -3,10 +3,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
-from app.domains.auth.schemas import RegisterRequest, UserResponse
+from app.domains.auth.schemas import (
+    RegisterRequest,
+    UserResponse,
+    TokenResponse,
+    RefreshTokenRequest,
+    LogoutRequest,
+)
 from app.domains.user.crud import get_user_by_email, create_user
-from app.domains.auth.schemas import TokenResponse, RefreshTokenRequest
-from app.domains.auth.services import login_user, refresh_access_token
+from app.domains.auth.services import login_user, refresh_access_token, logout_user
 
 router = APIRouter()
 
@@ -21,6 +26,12 @@ async def login(
         "refresh_token": refresh_token,
         "token_type": "bearer",
     }
+
+
+@router.post("/logout", status_code=204)
+async def logout(data: LogoutRequest):
+    await logout_user(data.refresh_token)
+    return {"message": "Logout Success!!"}
 
 
 @router.post("/register", response_model=UserResponse)

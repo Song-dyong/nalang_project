@@ -20,8 +20,6 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    print("token > ", token)
-
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
         user_id: str = payload.get("sub")

@@ -19,7 +19,7 @@ async def login_user(email: str, password: str, db: AsyncSession):
     access_token = create_access_token({"sub": str(user.id)})
     refresh_token = create_refresh_token({"sub": str(user.id)})
 
-    await redis_client.set(str(user.id), refresh_token, ex=7 * 24 * 60 * 60)
+    await redis_client.set(refresh_token, str(user.id), ex=7 * 24 * 60 * 60)
 
     return access_token, refresh_token
 
@@ -33,8 +33,8 @@ async def refresh_access_token(refresh_token: str) -> TokenResponse:
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
-    stored_token = await redis_client.get(user_id)
-    if stored_token != refresh_token:
+    stored_user_id = await redis_client.get(refresh_token)
+    if stored_user_id != user_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Mismatch Refresh Token"
         )
@@ -43,3 +43,7 @@ async def refresh_access_token(refresh_token: str) -> TokenResponse:
     return TokenResponse(
         access_token=new_access_token, refresh_token=refresh_token, token_type="bearer"
     )
+
+
+async def logout_user(refresh_token: str) -> None:
+    await redis_client.delete(refresh_token)
