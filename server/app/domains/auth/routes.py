@@ -1,18 +1,21 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
 from app.domains.auth.schemas import RegisterRequest, UserResponse
 from app.domains.user.crud import get_user_by_email, create_user
-from app.domains.auth.schemas import LoginRequest, TokenResponse, RefreshTokenRequest
+from app.domains.auth.schemas import TokenResponse, RefreshTokenRequest
 from app.domains.auth.services import login_user, refresh_access_token
 
 router = APIRouter()
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(data: LoginRequest, db: AsyncSession = Depends(get_db)):
-    access_token, refresh_token = await login_user(data.email, data.password, db)
+async def login(
+    data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
+):
+    access_token, refresh_token = await login_user(data.username, data.password, db)
     return {
         "access_token": access_token,
         "refresh_token": refresh_token,
