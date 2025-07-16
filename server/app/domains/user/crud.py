@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from app.domains.user.models import User
+from server.app.domains.user.models.users import User
 from app.domains.auth.utils import hash_password
 from app.domains.auth.schemas import RegisterRequest
 
