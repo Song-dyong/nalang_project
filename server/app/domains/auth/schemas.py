@@ -1,10 +1,13 @@
 from pydantic import BaseModel, EmailStr, Field
+from typing import Optional
 
 
 class RegisterRequest(BaseModel):
     email: EmailStr
     name: str = Field(..., min_length=2, max_length=30)
-    password: str = Field(..., min_length=8)
+    password: Optional[str] = Field(None, min_length=8)
+    provider: Optional[str] = "local"
+    profile_image: Optional[str] = None
 
 
 class UserResponse(BaseModel):

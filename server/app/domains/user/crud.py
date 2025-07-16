@@ -16,12 +16,15 @@ async def get_user_by_id(db: AsyncSession, id: int) -> User | None:
 
 
 async def create_user(db: AsyncSession, user_in: RegisterRequest) -> User:
-    hashed_pwd = hash_password(user_in.password)
+    hashed_pwd = None
+    if user_in.password:
+        hashed_pwd = hash_password(user_in.password)
     new_user = User(
         email=user_in.email,
         name=user_in.name,
         hashed_password=hashed_pwd,
-        provider="local",
+        provider=user_in.provider,
+        profile_image=user_in.profile_image,
     )
 
     db.add(new_user)
