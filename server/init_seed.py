@@ -1,57 +1,78 @@
-import asyncio
-from app.db.database import get_db
-from app.domains.user.models.users import User  # 👈 이거 반드시 필요
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.domains.user.models.language import Language, LanguageTranslation
 from app.domains.user.models.interest import Interest, InterestTranslation
+from app.domains.user.models.gender import Gender, GenderTranslation
+from app.db.database import async_session
+import asyncio
+import app.db.metadata
 
 
-async def seed():
-    async for session in get_db():
-        lang_ko = Language(code="ko")
-        lang_en = Language(code="en")
-        lang_ja = Language(code="ja")
-        session.add_all([lang_ko, lang_en, lang_ja])
-        await session.flush()
+async def seed_languages(db: AsyncSession):
+    languages = [
+        {"code": "en", "translations": {"en": "English", "ko": "영어", "ja": "英語"}},
+        {
+            "code": "ko",
+            "translations": {"en": "Korean", "ko": "한국어", "ja": "韓国語"},
+        },
+        {
+            "code": "ja",
+            "translations": {"en": "Japanese", "ko": "일본어", "ja": "日本語"},
+        },
+    ]
+    for lang_data in languages:
+        lang = Language(code=lang_data["code"])
+        db.add(lang)
+        await db.flush()  # lang.id 확보용
 
-        session.add_all(
-            [
-                LanguageTranslation(language_code="ko", locale="ko", name="한국어"),
-                LanguageTranslation(language_code="ko", locale="en", name="Korean"),
-                LanguageTranslation(language_code="ko", locale="ja", name="韓国語"),
-                LanguageTranslation(language_code="en", locale="ko", name="영어"),
-                LanguageTranslation(language_code="en", locale="en", name="English"),
-                LanguageTranslation(language_code="en", locale="ja", name="英語"),
-                LanguageTranslation(language_code="ja", locale="ko", name="일본어"),
-                LanguageTranslation(language_code="ja", locale="en", name="Japanese"),
-                LanguageTranslation(language_code="ja", locale="ja", name="日本語"),
-            ]
-        )
+        for locale, name in lang_data["translations"].items():
+            db.add(LanguageTranslation(language_id=lang.id, locale=locale, name=name))
 
-        interest_sports = Interest(name="sports")
-        interest_music = Interest(name="music")
-        interest_travel = Interest(name="travel")
-        session.add_all([interest_sports, interest_music, interest_travel])
-        await session.flush()
 
-        session.add_all(
-            [
-                InterestTranslation(interest_name="sports", locale="ko", name="스포츠"),
-                InterestTranslation(interest_name="sports", locale="en", name="Sports"),
-                InterestTranslation(
-                    interest_name="sports", locale="ja", name="スポーツ"
-                ),
-                InterestTranslation(interest_name="music", locale="ko", name="음악"),
-                InterestTranslation(interest_name="music", locale="en", name="Music"),
-                InterestTranslation(interest_name="music", locale="ja", name="音楽"),
-                InterestTranslation(interest_name="travel", locale="ko", name="여행"),
-                InterestTranslation(interest_name="travel", locale="en", name="Travel"),
-                InterestTranslation(interest_name="travel", locale="ja", name="旅行"),
-            ]
-        )
+async def seed_interests(db: AsyncSession):
+    interests = [
+        {"translations": {"en": "Travel", "ko": "여행", "ja": "旅行"}},
+        {"translations": {"en": "Music", "ko": "음악", "ja": "音楽"}},
+        {"translations": {"en": "Sports", "ko": "스포츠", "ja": "スポーツ"}},
+    ]
+    for item in interests:
+        interest = Interest(name=item["translations"]["en"])  # 원래 이름 (선택)
+        db.add(interest)
+        await db.flush()
 
-        await session.commit()
-        print("✅ Seed 완료")
+        for locale, name in item["translations"].items():
+            db.add(
+                InterestTranslation(interest_id=interest.id, locale=locale, name=name)
+            )
+
+
+async def seed_genders(db: AsyncSession):
+    genders = [
+        {"code": "male", "translations": {"en": "Male", "ko": "남성", "ja": "男性"}},
+        {
+            "code": "female",
+            "translations": {"en": "Female", "ko": "여성", "ja": "女性"},
+        },
+        {
+            "code": "other",
+            "translations": {"en": "Other", "ko": "기타", "ja": "その他"},
+        },
+    ]
+    for item in genders:
+        gender = Gender(code=item["code"])
+        db.add(gender)
+        await db.flush()
+
+        for locale, name in item["translations"].items():
+            db.add(GenderTranslation(gender_id=gender.id, locale=locale, name=name))
+
+
+async def main():
+    async with async_session() as db:
+        await seed_interests(db)
+        await seed_genders(db)
+        await seed_languages(db)
+        await db.commit()
 
 
 if __name__ == "__main__":
-    asyncio.run(seed())
+    asyncio.run(main())

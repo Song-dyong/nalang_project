@@ -53,17 +53,14 @@ def translate(translations, locale: str) -> str:
 
 
 async def get_user_profile(db: AsyncSession, user: User, lang: str) -> UserProfileOut:
-    # 관심사 번역
     interests = [
         translate(link.interest.translations, lang) for link in user.interest_links
     ]
 
-    # 언어 번역
     languages = [
         translate(link.language.translations, lang) for link in user.language_links
     ]
 
-    # 성별 번역 (1:N이지만 1개만 선택)
     gender = None
     if user.gender_links:
         gender_translations = user.gender_links[0].gender.translations
