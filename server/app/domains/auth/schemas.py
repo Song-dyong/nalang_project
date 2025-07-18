@@ -18,6 +18,12 @@ class UserResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class RegisterResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    user: UserResponse
+
+
 class TokenResponse(BaseModel):
     access_token: str
     refresh_token: str

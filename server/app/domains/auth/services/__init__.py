@@ -47,4 +47,3 @@ async def refresh_access_token(refresh_token: str) -> TokenResponse:
 
 async def logout_user(refresh_token: str) -> None:
     await redis_client.delete(refresh_token)
-

@@ -26,3 +26,10 @@ class UserProfileOut(BaseModel):
     interests: List[str]
     languages: List[str]
     gender: Optional[str]
+
+
+class SetUpOption(BaseModel):
+    id: int
+    name: str
+
+    model_config = {"from_attributes": True}

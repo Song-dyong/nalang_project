@@ -6,7 +6,7 @@ from starlette.responses import RedirectResponse
 from app.db.database import get_db
 from app.domains.auth.schemas import (
     RegisterRequest,
-    UserResponse,
+    RegisterResponse,
     TokenResponse,
     RefreshTokenRequest,
     LogoutRequest,
@@ -17,6 +17,7 @@ from app.domains.auth.services.google import (
     handle_google_callback,
     get_google_login_url,
 )
+from app.core.security import create_access_token, create_refresh_token
 from app.domains.auth.services.line import get_line_login_url, handle_line_callback
 from app.domains.auth.services.kakao import get_kakao_login_url, handle_kakao_callback
 from app.domains.auth.services.naver import get_naver_login_url, handle_naver_callback
@@ -42,7 +43,7 @@ async def logout(data: LogoutRequest):
     return {"message": "Logout Success!!"}
 
 
-@router.post("/register", response_model=UserResponse)
+@router.post("/register", response_model=RegisterResponse)
 async def register_user(user_in: RegisterRequest, db: AsyncSession = Depends(get_db)):
     existing_user = await get_user_by_email(db, user_in.email)
     if existing_user:
@@ -50,7 +51,9 @@ async def register_user(user_in: RegisterRequest, db: AsyncSession = Depends(get
             status_code=status.HTTP_400_BAD_REQUEST, detail="Existing Email"
         )
     user = await create_user(db, user_in)
-    return user
+    access_token = create_access_token({"sub": str(user.id)})
+    refresh_token = create_refresh_token({"sub": str(user.id)})
+    return {"access_token": access_token, "refresh_token": refresh_token, "user": user}
 
 
 @router.post("/refresh", response_model=TokenResponse)
