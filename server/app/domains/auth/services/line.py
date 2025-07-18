@@ -1,5 +1,6 @@
 import httpx
 from fastapi import Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -47,7 +48,6 @@ async def handle_line_callback(request: Request, db: AsyncSession):
 
         profile = profile_resp.json()
 
-    print("profile >>> ", profile)
     email = f"{profile["userId"]}@line.com"
     name = profile["displayName"]
     profile_image = profile["pictureUrl"]
@@ -69,4 +69,6 @@ async def handle_line_callback(request: Request, db: AsyncSession):
     refresh = create_refresh_token({"sub": str(user.id)})
     await redis_client.set(refresh, str(user.id), ex=60 * 60 * 24 * 7)
 
-    return {"access_token": access, "refresh_token": refresh, "token_type": "bearer"}
+    return RedirectResponse(
+        f"{settings.FRONT_REDIRECT_URL}?access_token={access}&refresh_token={refresh}"
+    )

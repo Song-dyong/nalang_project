@@ -1,7 +1,7 @@
 import httpx
 from fastapi import Request, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi.responses import JSONResponse
+from fastapi.responses import RedirectResponse
 
 from app.core.config import settings
 from app.domains.user.crud import get_user_by_email, create_user
@@ -44,7 +44,6 @@ async def handle_kakao_callback(request: Request, db: AsyncSession):
         )
         profile = profile_resp.json()
 
-    print("profile >>> ", profile)
     kakao_account = profile.get("kakao_account", {})
     email = kakao_account.get("email", f'{profile["id"]}@kakao.com')
     name = kakao_account.get("profile", {}).get("nickname", "Unknown")
@@ -68,4 +67,6 @@ async def handle_kakao_callback(request: Request, db: AsyncSession):
 
     await redis_client.set(refresh, str(user.id), ex=60 * 60 * 24 * 7)
 
-    return {"access_token": access, "refresh_token": refresh, "token_type": "bearer"}
+    return RedirectResponse(
+        f"{settings.FRONT_REDIRECT_URL}?access_token={access}&refresh_token={refresh}"
+    )

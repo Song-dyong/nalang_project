@@ -1,5 +1,6 @@
 import httpx
 from fastapi import HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import JSONResponse
 from app.core.config import settings
@@ -84,10 +85,6 @@ async def handle_google_callback(request: Request, db: AsyncSession) -> JSONResp
     refresh_token = create_refresh_token({"sub": str(user.id)})
     await redis_client.set(refresh_token, str(user.id), ex=60 * 60 * 24 * 7)
 
-    return JSONResponse(
-        {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer",
-        }
+    return RedirectResponse(
+        f"{settings.FRONT_REDIRECT_URL}?access_token={access_token}&refresh_token={refresh_token}"
     )

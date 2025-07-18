@@ -1,5 +1,6 @@
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
+import { SocialCallbackPage } from "../features/auth/pages/SocialCallbackPage";
 import { ProfileSetupPage } from "../features/user/pages/ProfileSetupPage";
 import { Home } from "../pages/Home";
 
@@ -27,5 +28,11 @@ export const Router = [
     name: "Login",
     path: "/login",
     element: LoginPage,
+  },
+  {
+    id: 4,
+    name: "Callback",
+    path: "/social/callback",
+    element: SocialCallbackPage,
   },
 ];
