@@ -2,6 +2,7 @@ import { LoginPage } from "../features/auth/pages/LoginPage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
 import { SocialCallbackPage } from "../features/auth/pages/SocialCallbackPage";
 import { ProfileSetupPage } from "../features/user/pages/ProfileSetupPage";
+import { VoiceCallPage } from "../features/voiceChat/pages/VoiceCallPage";
 import { Home } from "../pages/Home";
 
 export const Router = [
@@ -34,5 +35,11 @@ export const Router = [
     name: "Callback",
     path: "/social/callback",
     element: SocialCallbackPage,
+  },
+  {
+    id: 5,
+    name: "VoiceRoom",
+    path: "/voice-call",
+    element: VoiceCallPage,
   },
 ];

@@ -3,7 +3,7 @@ version: "3"
 services:
   livekit-server:
     image: livekit/livekit-server
-    command: --dev
+    command: ["--dev", "--bind", "0.0.0.0"]
     ports:
       - "7880:7880" # HTTP API 포트
       - "7881:7881" # WebRTC TCP 포트

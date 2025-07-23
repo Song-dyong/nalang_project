@@ -1,0 +1,13 @@
+from fastapi import APIRouter, Depends
+from app.domains.call.services.livekit_service import create_access_token
+from app.domains.user.models.users import User
+from app.domains.auth.deps import get_current_user
+from app.domains.call.schemas import TokenRequest
+
+router = APIRouter()
+
+
+@router.post("/token")
+def get_call_token(req: TokenRequest, current_user: User = Depends(get_current_user)):
+    token = create_access_token(identity=str(current_user.email), room_name=req.room)
+    return {"access_token": token}

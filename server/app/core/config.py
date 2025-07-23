@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     NAVER_CLIENT_SECRET: str
     NAVER_REDIRECT_URI: str
     FRONT_REDIRECT_URL: str
+    LIVEKIT_API_KEY: str
+    LIVEKIT_API_SECRET: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
