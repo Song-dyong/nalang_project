@@ -47,13 +47,23 @@ export const CallWaitingButton = () => {
   }, [message, navigate, send]);
 
   return (
-    <div>
+    <div className="space-y-3">
       {connected ? (
-        <button onClick={handleCancel}>대기 취소</button>
+        <button
+          onClick={handleCancel}
+          className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded transition"
+        >
+          대기 취소
+        </button>
       ) : (
-        <button onClick={handleClick}>통화하기</button>
+        <button
+          onClick={handleClick}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded transition"
+        >
+          통화하기
+        </button>
       )}
-      <p>{statusMessage}</p>
+      <p className="text-sm text-gray-600">{statusMessage}</p>
     </div>
   );
 };
