@@ -22,3 +22,9 @@ export const loginUser = async (data: LoginRequest): Promise<TokenResponse> => {
   });
   return response.data;
 };
+
+export const logoutUser = async (refreshToken: string): Promise<void> => {
+  await axios.post(`${API_ENDPOINT.AUTH}/logout`, {
+    refresh_token: refreshToken,
+  });
+};

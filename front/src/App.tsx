@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Router } from "./routes/router";
+import { RequireAuth } from "./features/auth/components/AuthRequire";
 function App() {
   return (
     <>
@@ -9,7 +10,15 @@ function App() {
             <Route
               key={route.id}
               path={route.path}
-              element={<route.element />}
+              element={
+                route.requireAuth ? (
+                  <RequireAuth>
+                    <route.element></route.element>
+                  </RequireAuth>
+                ) : (
+                  <route.element></route.element>
+                )
+              }
             />
           ))}
         </Routes>

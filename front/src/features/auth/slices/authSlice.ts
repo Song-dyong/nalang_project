@@ -4,7 +4,7 @@ import type {
   RegisterRequest,
   UserResponse,
 } from "../types/authTypes";
-import { loginUser, registerUser } from "../apis/authApi";
+import { loginUser, logoutUser, registerUser } from "../apis/authApi";
 
 interface AuthState {
   user: UserResponse["user"] | null;
@@ -48,10 +48,35 @@ export const loginThunk = createAsyncThunk(
     }
   }
 );
+
+export const logoutThunk = createAsyncThunk(
+  "auth/logout",
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      const refreshToken = localStorage.getItem("refresh_token");
+      if (refreshToken) {
+        await logoutUser(refreshToken);
+      }
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+
+      dispatch(logout());
+    } catch {
+      return rejectWithValue("Logout Failed");
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
-  reducers: {},
+  reducers: {
+    logout: (state) => {
+      state.user = null;
+      state.loading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(registerThunk.pending, (state) => {
@@ -80,4 +105,5 @@ const authSlice = createSlice({
   },
 });
 
+export const { logout } = authSlice.actions;
 export default authSlice.reducer;

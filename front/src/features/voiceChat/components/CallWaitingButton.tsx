@@ -7,7 +7,7 @@ export const CallWaitingButton = () => {
   const navigate = useNavigate();
 
   const accessToken = localStorage.getItem("access_token");
-  const { connect, send, message, connected } = useCallWebSocket();
+  const { connect, send, message, connected, disconnect } = useCallWebSocket();
 
   const handleClick = () => {
     if (!accessToken) {
@@ -21,7 +21,8 @@ export const CallWaitingButton = () => {
 
   const handleCancel = () => {
     send({ event: "cancel" });
-    setStatusMessage("대기 취소됨");
+    disconnect();
+    setStatusMessage("");
   };
 
   useEffect(() => {
@@ -51,16 +52,16 @@ export const CallWaitingButton = () => {
       {connected ? (
         <button
           onClick={handleCancel}
-          className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded transition"
+          className="w-full bg-red-200 hover:bg-red-400 text-white py-2 rounded transition"
         >
           대기 취소
         </button>
       ) : (
         <button
           onClick={handleClick}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded transition"
+          className="w-full bg-lime-100 hover:bg-lime-200 text-sky-300 py-2 rounded transition"
         >
-          통화하기
+          Call
         </button>
       )}
       <p className="text-sm text-gray-600">{statusMessage}</p>

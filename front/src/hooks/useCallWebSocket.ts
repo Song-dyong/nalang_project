@@ -7,6 +7,7 @@ type WebSocketState = {
   message: IncomingMessage | null;
   send: (data: object) => void;
   connect: (token: string) => void;
+  disconnect: () => void;
 };
 
 export const useCallWebSocket = (): WebSocketState => {
@@ -42,5 +43,11 @@ export const useCallWebSocket = (): WebSocketState => {
     }
   };
 
-  return { socket, connected, message, send, connect };
+  const disconnect = () => {
+    if (socket) {
+      socket.close();
+    }
+  };
+
+  return { socket, connected, message, send, connect, disconnect };
 };
