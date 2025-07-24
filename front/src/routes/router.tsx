@@ -39,7 +39,7 @@ export const Router = [
   {
     id: 5,
     name: "VoiceRoom",
-    path: "/voice-call",
+    path: "/voice-room/:roomName",
     element: VoiceCallPage,
   },
 ];
