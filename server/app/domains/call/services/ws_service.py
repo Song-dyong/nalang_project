@@ -1,10 +1,15 @@
-from fastapi import WebSocket, Depends, HTTPException
+from fastapi import WebSocket, HTTPException
 from jose import jwt, JWTError
 from app.core.config import settings
 from app.domains.user.models.users import User
 from app.db.database import async_session
 import uuid
 from typing import Dict, TypedDict, List, Set
+from app.db.redis import redis_client
+import json
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
+from datetime import datetime
 
 
 # ✅ 타입 명시용 TypedDict
@@ -32,19 +37,72 @@ async def get_current_user_ws(websocket: WebSocket) -> User:
         raise HTTPException(status_code=403, detail="Invalid Token")
 
     async with async_session() as session:
-        result = await session.get(User, user_id)
-        if result is None:
+        stmt = (
+            select(User)
+            .options(
+                selectinload(User.gender_links),
+                selectinload(User.language_links),
+            )
+            .where(User.id == user_id)
+        )
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        if user is None:
             raise HTTPException(status_code=404, detail="User not Found")
-        return result
+
+        return user
 
 
 async def handle_connect(websocket: WebSocket, user: User):
-    waiting_users[user.id] = websocket
+    gender_id = user.gender_links[0].gender_id if user.gender_links else None
+    language_ids = [link.language_id for link in user.language_links]
 
-    if len(waiting_users) >= 2:
-        ids = list(waiting_users.keys())[:2]
-        ws1, ws2 = waiting_users.pop(ids[0]), waiting_users.pop(ids[1])
-        user1_id, user2_id = ids[0], ids[1]
+    user_data = {
+        "id": user.id,
+        "gender_id": gender_id,
+        "languages": language_ids,
+        "birth_date": str(user.birth_date) if user.birth_date else None,
+    }
+
+    filters = {
+        "gender_id": websocket.query_params.get("filter_gender_id"),
+        "language_id": websocket.query_params.get("filter_language_id"),
+        "min_age": websocket.query_params.get("filter_min_age"),
+        "max_age": websocket.query_params.get("filter_max_age"),
+    }
+
+    print("[서버 수신 필터]", filters)
+
+    # ✅ 1. Redis에 user 정보와 filters 함께 저장
+    redis_key = f"call:user:{user.id}"
+    await redis_client.set(
+        redis_key, json.dumps({"user": user_data, "filters": filters}), ex=600
+    )
+
+    # ✅ 2. 기존 대기자 중 양방향 조건을 모두 만족하는 상대 찾기
+    matched_user_id = None
+    for other_id, other_ws in list(waiting_users.items()):
+        if other_id == user.id:
+            continue
+
+        other_key = f"call:user:{other_id}"
+        other_json = await redis_client.get(other_key)
+        if not other_json:
+            continue
+
+        parsed = json.loads(other_json)
+        other_data = parsed["user"]
+        other_filters = parsed["filters"]
+
+        if is_match(other_data, filters) and is_match(user_data, other_filters):
+            matched_user_id = other_id
+            break
+
+    # ✅ 3. 매칭 성사 시 match_proposal 전송
+    if matched_user_id:
+        ws1, ws2 = websocket, waiting_users.pop(matched_user_id)
+        user1_id, user2_id = user.id, matched_user_id
 
         room_name = f"room_{user1_id}_{user2_id}_{uuid.uuid4().hex[:6]}"
 
@@ -53,13 +111,23 @@ async def handle_connect(websocket: WebSocket, user: User):
             "sockets": [ws1, ws2],
             "accepted": set(),
         }
+
         await ws1.send_json(
             {"event": "match_proposal", "room": room_name, "partner_id": user2_id}
         )
         await ws2.send_json(
             {"event": "match_proposal", "room": room_name, "partner_id": user1_id}
         )
+
+        await redis_client.delete(f"call:user:{user1_id}")
+        await redis_client.delete(f"call:user:{user2_id}")
+
         print(f"[매칭 제안] {user1_id} <-> {user2_id} in {room_name}")
+
+    else:
+        # 4. 매칭 실패 시 대기열 등록
+        waiting_users[user.id] = websocket
+        print(f"[대기열 등록] {user.id} - 조건: {filters}")
 
 
 async def handle_receive_event(user: User, msg: dict):
@@ -81,7 +149,7 @@ async def handle_receive_event(user: User, msg: dict):
     elif event == "reject":
         for idx, sock in enumerate(matching_candidates[room]["sockets"]):
             partner_id = matching_candidates[room]["user_ids"][idx]
-            await sock.send_json({"event": "rejected"})  # ✅ 오타 수정
+            await sock.send_json({"event": "rejected"})
             waiting_users[partner_id] = sock
 
         del matching_candidates[room]
@@ -104,3 +172,36 @@ async def handle_disconnect(user_id: int):
         del matching_candidates[r]
 
     print(f"[연결 종료] {user_id}")
+
+
+def is_match(user_data: dict, filters: dict) -> bool:
+    if filters.get("gender_id") and user_data.get("gender_id") != int(
+        filters["gender_id"]
+    ):
+        return False
+
+    if filters.get("language_id"):
+        if int(filters["language_id"]) not in user_data.get("languages", []):
+            return False
+
+    if user_data.get("birth_date") and (
+        filters.get("min_age") or filters.get("max_age")
+    ):
+        try:
+            birth = datetime.strptime(user_data["birth_date"], "%Y-%m-%d")
+            today = datetime.today()
+            age = (
+                today.year
+                - birth.year
+                - ((today.month, today.day) < (birth.month, birth.day))
+            )
+
+            if filters.get("min_age") and age < int(filters["min_age"]):
+                return False
+            if filters.get("max_age") and age > int(filters["max_age"]):
+                return False
+        except Exception as e:
+            print("birth_date parse error", e)
+            return False
+
+    return True

@@ -15,6 +15,7 @@ export interface UserResponse {
     interests: List[string];
     languages: List[string];
     genders?: string;
+    img_path?: string;
   };
 }
 

@@ -3,7 +3,11 @@ import { RegisterPage } from "../features/auth/pages/RegisterPage";
 import { SocialCallbackPage } from "../features/auth/pages/SocialCallbackPage";
 import { ProfileSetupPage } from "../features/user/pages/ProfileSetupPage";
 import { VoiceCallPage } from "../features/voiceChat/pages/VoiceCallPage";
+import { Chat } from "../pages/Chat";
+import { Community } from "../pages/Community";
+import { Feed } from "../pages/Feed";
 import { Home } from "../pages/Home";
+import { Profile } from "../pages/Profile.";
 
 export const Router = [
   {
@@ -46,6 +50,34 @@ export const Router = [
     name: "VoiceRoom",
     path: "/voice-room/:roomName",
     element: VoiceCallPage,
+    requireAuth: true,
+  },
+  {
+    id: 6,
+    name: "Feed",
+    path: "/feed",
+    element: Feed,
+    requireAuth: true,
+  },
+  {
+    id: 7,
+    name: "Chat",
+    path: "/chat",
+    element: Chat,
+    requireAuth: true,
+  },
+  {
+    id: 8,
+    name: "Community",
+    path: "/community",
+    element: Community,
+    requireAuth: true,
+  },
+  {
+    id: 9,
+    name: "Profile",
+    path: "/profile",
+    element: Profile,
     requireAuth: true,
   },
 ];

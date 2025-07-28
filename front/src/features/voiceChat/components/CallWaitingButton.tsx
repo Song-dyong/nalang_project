@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { useCallWebSocket } from "../../../hooks/useCallWebSocket";
 import { useNavigate } from "react-router-dom";
+interface OwnProps {
+  filters?: {
+    genderId?: number;
+    languageId?: number;
+    minAge?: number;
+    maxAge?: number;
+  };
+}
 
-export const CallWaitingButton = () => {
+export const CallWaitingButton = ({ filters }: OwnProps) => {
   const [statusMessage, setStatusMessage] = useState("");
   const navigate = useNavigate();
 
@@ -15,7 +23,7 @@ export const CallWaitingButton = () => {
       return;
     }
 
-    connect(accessToken);
+    connect(accessToken, filters);
     setStatusMessage("대기열에 등록 중 ...");
   };
 
@@ -52,16 +60,16 @@ export const CallWaitingButton = () => {
       {connected ? (
         <button
           onClick={handleCancel}
-          className="w-full bg-red-200 hover:bg-red-400 text-white py-2 rounded transition"
+          className="w-full bg-red-200 hover:bg-red-400 text-white py-2 rounded-[50px] transition"
         >
           대기 취소
         </button>
       ) : (
         <button
           onClick={handleClick}
-          className="w-full bg-lime-100 hover:bg-lime-200 text-sky-300 py-2 rounded transition"
+          className="w-full bg-lime-100 hover:bg-lime-200 text-sky-300 py-2 rounded-[50px] transition font-bold"
         >
-          Call
+          대화상대 찾아보기
         </button>
       )}
       <p className="text-sm text-gray-600">{statusMessage}</p>

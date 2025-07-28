@@ -13,6 +13,7 @@ class User(Base):
     name = Column(String, nullable=False)
     profile_image = Column(String, nullable=True)
     provider = Column(String, default="local")
+    birth_date = Column(DateTime)
     created_at = Column(DateTime, default=datetime.now)
 
     interest_links = relationship(
