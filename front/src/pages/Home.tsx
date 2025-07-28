@@ -20,7 +20,7 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex flex-col items-center justify-center">
-      <div className="absolute top-4 right-4">
+      <div className="top-4 right-4">
         <button
           onClick={handleLogout}
           className="text-sm bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded"

@@ -3,6 +3,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   TokenResponse,
+  UserProfileResponse,
   UserResponse,
 } from "../types/authTypes";
 import { API_ENDPOINT } from "../../../apis/config";
@@ -27,4 +28,15 @@ export const logoutUser = async (refreshToken: string): Promise<void> => {
   await axios.post(`${API_ENDPOINT.AUTH}/logout`, {
     refresh_token: refreshToken,
   });
+};
+
+export const fetchMe = async (
+  accessToken: string
+): Promise<UserProfileResponse> => {
+  const response = await axios.get(`${API_ENDPOINT.USER}/me`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  return response.data;
 };

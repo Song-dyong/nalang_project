@@ -4,7 +4,7 @@ import type {
   RegisterRequest,
   UserResponse,
 } from "../types/authTypes";
-import { loginUser, logoutUser, registerUser } from "../apis/authApi";
+import { fetchMe, loginUser, logoutUser, registerUser } from "../apis/authApi";
 
 interface AuthState {
   user: UserResponse["user"] | null;
@@ -25,7 +25,6 @@ export const registerThunk = createAsyncThunk(
       const response = await registerUser(data);
       localStorage.setItem("access_token", response.access_token);
       localStorage.setItem("refresh_token", response.refresh_token);
-      console.log("response >>>>>  ", response);
       return response;
     } catch {
       return rejectWithValue("Register Failed");
@@ -36,9 +35,7 @@ export const loginThunk = createAsyncThunk(
   "auth/login",
   async (data: LoginRequest, { rejectWithValue }) => {
     try {
-      console.log(data);
       const response = await loginUser(data);
-      console.log("login 후 response>>", response);
       localStorage.setItem("access_token", response.access_token);
       localStorage.setItem("refresh_token", response.refresh_token);
 
@@ -63,6 +60,22 @@ export const logoutThunk = createAsyncThunk(
       dispatch(logout());
     } catch {
       return rejectWithValue("Logout Failed");
+    }
+  }
+);
+
+export const fetchMeThunk = createAsyncThunk(
+  "auth/getchMe",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        throw new Error("No Token");
+      }
+      const response = await fetchMe(token);
+      return response;
+    } catch {
+      return rejectWithValue("Failed to Fetch user");
     }
   }
 );
@@ -99,6 +112,18 @@ const authSlice = createSlice({
         state.loading = false;
       })
       .addCase(loginThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(fetchMeThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMeThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(fetchMeThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });
