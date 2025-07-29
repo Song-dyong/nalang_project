@@ -11,26 +11,34 @@ export const InterestSelector = ({
   selectedInterests,
   onChange,
 }: OwnProps) => {
-  const toggleInterest = (id: number) => {
-    if (selectedInterests.includes(id)) {
-      onChange(selectedInterests.filter((i) => i !== id));
-    } else {
-      onChange([...selectedInterests, id]);
-    }
-  };
+  const toggle = (id: number) =>
+    selectedInterests.includes(id)
+      ? onChange(selectedInterests.filter((i) => i !== id))
+      : onChange([...selectedInterests, id]);
+
   return (
     <div>
-      <h3>Interest</h3>
-      {interests.map((interest) => (
-        <label key={interest.id}>
-          <input
-            type="checkbox"
-            checked={selectedInterests.includes(interest.id)}
-            onChange={() => toggleInterest(interest.id)}
-          />
-          {interest.name}
-        </label>
-      ))}
+      <h3 className="text-sm font-semibold mb-2 mt-4">관심사</h3>
+      <div className="flex flex-wrap gap-2">
+        {interests.map((interest) => {
+          const isSelected = selectedInterests.includes(interest.id);
+          return (
+            <button
+              key={interest.id}
+              onClick={() => toggle(interest.id)}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-150
+                ${
+                  isSelected
+                    ? "bg-[#A6DAF4] text-white hover:bg-[#92cbe6]"
+                    : "bg-white text-gray-700 hover:bg-[#E0F3FA]"
+                }
+              `}
+            >
+              {interest.name}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 };

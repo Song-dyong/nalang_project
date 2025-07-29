@@ -32,7 +32,6 @@ export const WaitingRoom = () => {
     };
   }, [location]);
 
-  // WebSocket 메시지 수신 처리
   useEffect(() => {
     if (!message) return;
 
@@ -45,7 +44,6 @@ export const WaitingRoom = () => {
       setMatchInfo(undefined);
       setCountdown(0);
 
-      // 다시 필터 정보를 기반으로 재등록
       const accessToken = localStorage.getItem("access_token");
       if (!accessToken) return;
 
@@ -78,7 +76,6 @@ export const WaitingRoom = () => {
     }
   }, [message]);
 
-  // 타이머 동작
   useEffect(() => {
     if (!matchInfo) return;
     if (countdown <= 0) {

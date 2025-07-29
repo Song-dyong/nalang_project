@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import Logo from "../assets/NaLang_Logo2.png";
 import { FooterNavigationBar } from "./FooterNavigationBar";
 
@@ -6,7 +6,9 @@ export const Landing = () => {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#fefeed] text-gray-800">
       <div className="flex flex-col justify-center items-center w-full lg:w-2/3 p-4 text-center space-y-6">
-        <img src={Logo} alt="NaLangLogo" className="w-32" />
+        <Link to="/home">
+          <img src={Logo} alt="NaLangLogo" className="w-32" />
+        </Link>
         <p className="text-lg max-w-xl leading-relaxed">
           언어를 나누고 친구를 사귀는
           <br />

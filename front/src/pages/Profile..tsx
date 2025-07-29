@@ -1,14 +1,22 @@
 import { useSelector } from "react-redux";
 import type { RootState } from "../stores/store";
 import newbie from "../assets/newbie.jpg";
+import { useNavigate } from "react-router-dom";
+import { Pencil, Phone, LogOut } from "lucide-react";
 export const Profile = () => {
   const user = useSelector((state: RootState) => state.auth.user);
   console.log(user);
+  const navigate = useNavigate();
   return (
     <div className="relative h-full bg-white flex flex-col items-center px-6 pt-10">
       {/* 설정 버튼 */}
-      <button className="absolute top-6 right-6 text-gray-500 text-2xl">
-        ⚙️
+      <button
+        onClick={() => {
+          navigate("/login");
+        }}
+        className="absolute top-6 right-6 text-gray-500 hover:text-red-500 transition"
+      >
+        <LogOut size={24} />
       </button>
 
       <div className="relative">
@@ -16,8 +24,11 @@ export const Profile = () => {
           src={user?.image_path || newbie}
           className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover"
         />
-        <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow -mb-1 -mr-1 text-lg">
-          ✏️
+        <div
+          onClick={() => navigate("/profile/setup")}
+          className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow -mb-1 -mr-1 hover:cursor-pointer"
+        >
+          <Pencil size={18} />
         </div>
       </div>
 
@@ -29,7 +40,7 @@ export const Profile = () => {
       {/* 통화 기록 메뉴 */}
       <div className="w-full mt-10 border-t">
         <button className="w-full flex items-center py-4 border-b px-4">
-          <span className="text-xl mr-3">📞</span>
+          <Phone className="w-5 h-5 mr-3 text-gray-500" />
           <span className="text-gray-700 font-medium">통화 기록</span>
         </button>
       </div>
