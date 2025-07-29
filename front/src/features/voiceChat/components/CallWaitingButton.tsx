@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { useCallWebSocket } from "../../../hooks/useCallWebSocket";
 import { useNavigate } from "react-router-dom";
+
 interface OwnProps {
   filters?: {
     genderId?: number;
@@ -11,68 +10,32 @@ interface OwnProps {
 }
 
 export const CallWaitingButton = ({ filters }: OwnProps) => {
-  const [statusMessage, setStatusMessage] = useState("");
   const navigate = useNavigate();
 
-  const accessToken = localStorage.getItem("access_token");
-  const { connect, send, message, connected, disconnect } = useCallWebSocket();
-
   const handleClick = () => {
+    const accessToken = localStorage.getItem("access_token");
     if (!accessToken) {
       alert("로그인이 필요합니다!");
       return;
     }
 
-    connect(accessToken, filters);
-    setStatusMessage("대기열에 등록 중 ...");
-  };
+    // 필터 정보를 쿼리 스트링으로 넘김
+    const query = new URLSearchParams();
+    if (filters?.genderId) query.append("genderId", String(filters.genderId));
+    if (filters?.languageId)
+      query.append("languageId", String(filters.languageId));
+    if (filters?.minAge) query.append("minAge", String(filters.minAge));
+    if (filters?.maxAge) query.append("maxAge", String(filters.maxAge));
 
-  const handleCancel = () => {
-    send({ event: "cancel" });
-    disconnect();
-    setStatusMessage("");
+    navigate(`/waiting?${query.toString()}`);
   };
-
-  useEffect(() => {
-    if (!message || !("event" in message)) return;
-    switch (message.event) {
-      case "match_proposal":
-        setStatusMessage(`매칭 제안 Room: ${message.room}`);
-        send({ event: "accept", room: message.room });
-        break;
-      case "matched":
-        setStatusMessage(`매칭 완료! Room: ${message.room}`);
-        navigate(`/voice-room/${message.room}`);
-        break;
-      case "rejected":
-        setStatusMessage("상대 매칭 거절");
-        break;
-      case "disconnected":
-        setStatusMessage("상대와 연결 종료");
-        break;
-      default:
-        setStatusMessage("알 수 없는 메시지 수신");
-    }
-  }, [message, navigate, send]);
 
   return (
-    <div className="space-y-3">
-      {connected ? (
-        <button
-          onClick={handleCancel}
-          className="w-full bg-red-200 hover:bg-red-400 text-white py-2 rounded-[50px] transition"
-        >
-          대기 취소
-        </button>
-      ) : (
-        <button
-          onClick={handleClick}
-          className="w-full bg-lime-100 hover:bg-lime-200 text-sky-300 py-2 rounded-[50px] transition font-bold"
-        >
-          대화상대 찾아보기
-        </button>
-      )}
-      <p className="text-sm text-gray-600">{statusMessage}</p>
-    </div>
+    <button
+      onClick={handleClick}
+      className="w-full bg-lime-100 hover:bg-lime-200 text-sky-300 py-2 rounded-[50px] transition font-bold"
+    >
+      대화상대 찾아보기
+    </button>
   );
 };

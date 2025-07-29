@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { IncomingMessage } from "../features/voiceChat/types/wsTypes";
 
 type WebSocketState = {
-  socket: WebSocket | null;
+  // socket: WebSocket | null;
   connected: boolean;
   message: IncomingMessage | null;
   send: (data: object) => void;
@@ -19,7 +19,8 @@ type WebSocketState = {
 };
 
 export const useCallWebSocket = (): WebSocketState => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
+  // const [socket, setSocket] = useState<WebSocket | null>(null);
   const [connected, setConnected] = useState(false);
   const [message, setMessage] = useState<IncomingMessage | null>(null);
 
@@ -34,23 +35,23 @@ export const useCallWebSocket = (): WebSocketState => {
   ) => {
     let url = `${import.meta.env.VITE_SERVER_WS_URL}/ws/waiting?token=${token}`;
     if (filters) {
-      if (filters.genderId !== undefined)
+      if (filters.genderId !== undefined && filters.genderId !== 0)
         url += `&filter_gender_id=${filters.genderId}`;
-      if (filters.minAge !== undefined)
+      if (filters.minAge !== undefined && filters.minAge !== 0)
         url += `&filter_min_age=${filters.minAge}`;
-      if (filters.maxAge !== undefined)
+      if (filters.maxAge !== undefined && filters.maxAge !== 0)
         url += `&filter_max_age=${filters.maxAge}`;
-      if (filters.languageId !== undefined)
+      if (filters.languageId !== undefined && filters.languageId !== 0)
         url += `&filter_language_id=${filters.languageId}`;
     }
-    // ✅ 여기에 추가
-    console.log("[WebSocket 연결 URL]:", url);
-    console.log("[전달된 필터]:", filters);
+
     const ws = new WebSocket(url);
-    setSocket(ws);
+    socketRef.current = ws;
+    // setSocket(ws);
     setConnected(true);
     ws.onopen = () => console.log("웹소켓 연결됨");
     ws.onmessage = (event) => {
+      console.log("[WebSocket 수신 메시지]:", event.data);
       try {
         const parsed = JSON.parse(event.data) as IncomingMessage;
         setMessage(parsed);
@@ -58,23 +59,28 @@ export const useCallWebSocket = (): WebSocketState => {
         console.log("웹소켓 메시지 파싱 에러", err);
       }
     };
+    ws.onerror = (e) => {
+      console.error("웹소켓 오류 발생:", e);
+    };
     ws.onclose = () => {
       setConnected(false);
-      setSocket(null);
+      // setSocket(null);
+      socketRef.current = null;
     };
   };
 
   const send = (data: object) => {
-    if (socket && socket.readyState == WebSocket.OPEN) {
-      socket.send(JSON.stringify(data));
+    if (socketRef.current && socketRef.current.readyState == WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(data));
     }
   };
 
   const disconnect = () => {
-    if (socket) {
-      socket.close();
+    if (socketRef.current) {
+      socketRef.current.close();
+      console.log("웹소켓 끊김");
     }
   };
 
-  return { socket, connected, message, send, connect, disconnect };
+  return { connected, message, send, connect, disconnect };
 };

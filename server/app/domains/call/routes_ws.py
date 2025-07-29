@@ -23,6 +23,10 @@ async def websocket_waiting(
         async for msg in websocket.iter_json():
             await handle_receive_event(current_user, msg)
     except WebSocketDisconnect:
+        print("WebSocketDisconnect 익셉션 발생 !!", current_user)
+        await handle_disconnect(current_user.id)
+    finally:
+        print("Finally에서 레디스 유저 삭제")
         await handle_disconnect(current_user.id)
 
 

@@ -3,6 +3,7 @@ import { RegisterPage } from "../features/auth/pages/RegisterPage";
 import { SocialCallbackPage } from "../features/auth/pages/SocialCallbackPage";
 import { ProfileSetupPage } from "../features/user/pages/ProfileSetupPage";
 import { VoiceCallPage } from "../features/voiceChat/pages/VoiceCallPage";
+import { WaitingRoom } from "../features/voiceChat/pages/WaitingRoom";
 import { Chat } from "../pages/Chat";
 import { Community } from "../pages/Community";
 import { Feed } from "../pages/Feed";
@@ -78,6 +79,13 @@ export const Router = [
     name: "Profile",
     path: "/profile",
     element: Profile,
+    requireAuth: true,
+  },
+  {
+    id: 10,
+    name: "Waiting",
+    path: "/waiting",
+    element: WaitingRoom,
     requireAuth: true,
   },
 ];

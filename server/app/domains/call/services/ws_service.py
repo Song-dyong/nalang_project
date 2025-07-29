@@ -12,7 +12,6 @@ from sqlalchemy.orm import selectinload
 from datetime import datetime
 
 
-# ✅ 타입 명시용 TypedDict
 class MatchCandidate(TypedDict):
     user_ids: List[int]
     sockets: List[WebSocket]
@@ -74,13 +73,11 @@ async def handle_connect(websocket: WebSocket, user: User):
 
     print("[서버 수신 필터]", filters)
 
-    # ✅ 1. Redis에 user 정보와 filters 함께 저장
     redis_key = f"call:user:{user.id}"
     await redis_client.set(
         redis_key, json.dumps({"user": user_data, "filters": filters}), ex=600
     )
 
-    # ✅ 2. 기존 대기자 중 양방향 조건을 모두 만족하는 상대 찾기
     matched_user_id = None
     for other_id, other_ws in list(waiting_users.items()):
         if other_id == user.id:
@@ -99,7 +96,6 @@ async def handle_connect(websocket: WebSocket, user: User):
             matched_user_id = other_id
             break
 
-    # ✅ 3. 매칭 성사 시 match_proposal 전송
     if matched_user_id:
         ws1, ws2 = websocket, waiting_users.pop(matched_user_id)
         user1_id, user2_id = user.id, matched_user_id
@@ -125,7 +121,6 @@ async def handle_connect(websocket: WebSocket, user: User):
         print(f"[매칭 제안] {user1_id} <-> {user2_id} in {room_name}")
 
     else:
-        # 4. 매칭 실패 시 대기열 등록
         waiting_users[user.id] = websocket
         print(f"[대기열 등록] {user.id} - 조건: {filters}")
 
@@ -133,7 +128,7 @@ async def handle_connect(websocket: WebSocket, user: User):
 async def handle_receive_event(user: User, msg: dict):
     event = msg.get("event")
     room = msg.get("room")
-
+    print("서버에서 처리하는 msg dict", msg, event, room)
     if room not in matching_candidates:
         return
 
@@ -146,32 +141,49 @@ async def handle_receive_event(user: User, msg: dict):
             del matching_candidates[room]
             print(f"[매칭 성사] {room}")
 
-    elif event == "reject":
-        for idx, sock in enumerate(matching_candidates[room]["sockets"]):
-            partner_id = matching_candidates[room]["user_ids"][idx]
-            await sock.send_json({"event": "rejected"})
-            waiting_users[partner_id] = sock
+    elif event == "rejected":
+        user_ids = matching_candidates[room]["user_ids"]
+        sockets = matching_candidates[room]["sockets"]
 
+        for idx, uid in enumerate(user_ids):
+            if uid != user.id:  # 상대방만 메시지 받음
+                partner_sock = sockets[idx]
+                try:
+                    await partner_sock.send_json({"event": "rejected"})
+                    print(f"[전송 성공] rejected → user_id={uid}")
+                    waiting_users[uid] = partner_sock  # 다시 대기열 등록
+                except Exception as e:
+                    print(f"[전송 실패] user_id={uid}, error={e}")
         del matching_candidates[room]
         print(f"[매칭 거절] {room}")
 
 
 async def handle_disconnect(user_id: int):
+    # 대기열에 있던 유저 제거
     if user_id in waiting_users:
         del waiting_users[user_id]
+        await redis_client.delete(f"call:user:{user_id}")  # ✅ 이거 추가해야 함
+        print(f"[대기열에서 제거 + Redis 삭제] user_id={user_id}")
 
+    # 매칭 진행 중이던 유저 처리
     to_remove = []
 
     for room, data in matching_candidates.items():
         if user_id in data["user_ids"]:
             for sock in data["sockets"]:
-                await sock.send_json({"event": "disconnected"})
+                try:
+                    await sock.send_json({"event": "disconnected"})
+                except Exception as e:
+                    print(f"[disconnect 알림 실패] user={user_id}, err={e}")
+            await redis_client.delete(
+                f"call:user:{user_id}"
+            )  # ✅ 혹시 몰라 double check
             to_remove.append(room)
 
     for r in to_remove:
         del matching_candidates[r]
 
-    print(f"[연결 종료] {user_id}")
+    print(f"[연결 종료 완료] user_id={user_id}")
 
 
 def is_match(user_data: dict, filters: dict) -> bool:
