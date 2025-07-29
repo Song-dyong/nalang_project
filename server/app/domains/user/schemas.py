@@ -26,6 +26,7 @@ class UserProfileOut(BaseModel):
     interests: List[str]
     languages: List[str]
     gender: Optional[str]
+    image_path: str
 
 
 class SetUpOption(BaseModel):

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import RedirectResponse
@@ -99,3 +99,8 @@ async def naver_login():
 @router.get("/naver/callback")
 async def naver_callback(request: Request, db: AsyncSession = Depends(get_db)):
     return await handle_naver_callback(request, db)
+
+
+@router.post("/refresh", response_model=TokenResponse)
+async def refresh_token_route(refresh_token: str = Body(...)):
+    return await refresh_access_token(refresh_token)

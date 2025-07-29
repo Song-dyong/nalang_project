@@ -7,6 +7,7 @@ import type {
   UserResponse,
 } from "../types/authTypes";
 import { API_ENDPOINT } from "../../../apis/config";
+import axiosInstance from "../../../utils/axiosInstance";
 
 export const registerUser = async (
   data: RegisterRequest
@@ -16,11 +17,16 @@ export const registerUser = async (
 };
 
 export const loginUser = async (data: LoginRequest): Promise<TokenResponse> => {
-  const response = await axios.post(`${API_ENDPOINT.AUTH}/login`, data, {
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-  });
+  const response = await axiosInstance.post(
+    `${API_ENDPOINT.AUTH}/login`,
+    data,
+    {
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        skipAuth: true,
+      },
+    }
+  );
   return response.data;
 };
 
@@ -33,7 +39,7 @@ export const logoutUser = async (refreshToken: string): Promise<void> => {
 export const fetchMe = async (
   accessToken: string
 ): Promise<UserProfileResponse> => {
-  const response = await axios.get(`${API_ENDPOINT.USER}/me`, {
+  const response = await axiosInstance.get(`${API_ENDPOINT.USER}/me`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

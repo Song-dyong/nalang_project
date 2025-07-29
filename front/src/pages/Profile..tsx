@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../stores/store";
 import newbie from "../assets/newbie.jpg";
-
 export const Profile = () => {
-  const [imagePath, setImagePath] = useState(newbie);
+  const user = useSelector((state: RootState) => state.auth.user);
+  console.log(user);
   return (
     <div className="relative h-full bg-white flex flex-col items-center px-6 pt-10">
       {/* 설정 버튼 */}
@@ -12,7 +13,7 @@ export const Profile = () => {
 
       <div className="relative">
         <img
-          src={imagePath}
+          src={user?.image_path || newbie}
           className="w-32 h-32 rounded-full border-4 border-white shadow-md object-cover"
         />
         <div className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow -mb-1 -mr-1 text-lg">
@@ -21,7 +22,9 @@ export const Profile = () => {
       </div>
 
       {/* 사용자 닉네임 */}
-      <p className="mt-4 text-lg font-bold text-gray-800">4334675호 고양이</p>
+      <p className="mt-4 text-lg font-bold text-gray-800">
+        {user?.name || "의문의 고양이"}
+      </p>
 
       {/* 통화 기록 메뉴 */}
       <div className="w-full mt-10 border-t">

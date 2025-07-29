@@ -17,7 +17,7 @@ export const VoiceCallRoom = () => {
       navigate("/");
       return;
     }
-    fetchCallToken(roomName, accessToken)
+    fetchCallToken(roomName)
       .then(setToken)
       .catch((err) => {
         console.error("토큰 발급 실패", err);

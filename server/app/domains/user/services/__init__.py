@@ -72,6 +72,7 @@ async def get_user_profile(db: AsyncSession, user: User, lang: str) -> UserProfi
         interests=interests,
         languages=languages,
         gender=gender,
+        image_path=user.profile_image,
     )
 
 

@@ -1,6 +1,7 @@
 import axios from "axios";
 import type { SetupOption } from "../types/setupTypes";
 import { API_ENDPOINT } from "../../../apis/config";
+import axiosInstance from "../../../utils/axiosInstance";
 
 interface ProfileUpdatePayload {
   interests: number[];
@@ -39,13 +40,6 @@ export const fetchGenders = async (locale: string): Promise<SetupOption[]> => {
   return response.data;
 };
 
-export const updateUserProfile = async (
-    data: ProfileUpdatePayload,
-    token: string
-) => {
-    await axios.post(`${API_ENDPOINT.USER}/me/profile`, data, {
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    })
-}
+export const updateUserProfile = async (data: ProfileUpdatePayload) => {
+  await axiosInstance.post(`${API_ENDPOINT.USER}/me/profile`, data);
+};

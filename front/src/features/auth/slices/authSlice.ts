@@ -65,7 +65,7 @@ export const logoutThunk = createAsyncThunk(
 );
 
 export const fetchMeThunk = createAsyncThunk(
-  "auth/getchMe",
+  "auth/fetchMe",
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("access_token");
