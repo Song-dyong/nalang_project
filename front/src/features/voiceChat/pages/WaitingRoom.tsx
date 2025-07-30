@@ -1,17 +1,19 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useCallWebSocket } from "../../../hooks/useCallWebSocket";
 import { fetchCallToken, getPartnerData } from "../apis/callApi";
 import type { MatchProposalMessage } from "../types/wsTypes";
 import type { UserProfileResponse } from "../../auth/types/authTypes";
+
 export const WaitingRoom = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { connect, send, message, disconnect } = useCallWebSocket();
   const [matchInfo, setMatchInfo] = useState<MatchProposalMessage>();
   const [countdown, setCountdown] = useState(10);
-
   const [partnerData, setPartnerData] = useState<UserProfileResponse>();
+
+  const hasEnteredRoom = useRef(false); // ✅ 통화방 입장 여부 추적
 
   useEffect(() => {
     const accessToken = localStorage.getItem("access_token");
@@ -26,8 +28,10 @@ export const WaitingRoom = () => {
     };
 
     connect(accessToken, filters);
+
     return () => {
-      if (matchInfo?.room) {
+      // ✅ 입장한 경우에는 rejected 보내지 않음
+      if (!hasEnteredRoom.current && matchInfo?.room) {
         send({ event: "rejected", room: matchInfo.room });
       }
       disconnect();
@@ -36,8 +40,8 @@ export const WaitingRoom = () => {
 
   useEffect(() => {
     if (!message) return;
-
     if (message?.event === "match_proposal") {
+      if (matchInfo?.room === message.room) return;
       setMatchInfo(message);
       console.log("matchInfo !! >> ", message);
       setCountdown(5);
@@ -71,6 +75,7 @@ export const WaitingRoom = () => {
     if (message.event === "rejected") {
       setMatchInfo(undefined);
       setCountdown(0);
+
       const accessToken = localStorage.getItem("access_token");
       if (!accessToken) return;
 
@@ -84,11 +89,12 @@ export const WaitingRoom = () => {
 
       connect(accessToken, filters);
     }
-  }, [message]);
+  }, [message, connect, location]);
 
   useEffect(() => {
     if (!matchInfo) return;
     if (countdown <= 0) {
+      hasEnteredRoom.current = true; // ✅ 입장 완료 표시
       enterVoiceRoom();
       return;
     }
@@ -102,8 +108,12 @@ export const WaitingRoom = () => {
   const enterVoiceRoom = async () => {
     const accessToken = localStorage.getItem("access_token");
     if (!accessToken || !matchInfo?.room) return;
+
     try {
+      send({ event: "entered", room: matchInfo.room }); // ✅ 먼저 서버에 통보
       const token = await fetchCallToken(matchInfo.room);
+      disconnect(); // ✅ 그 다음 연결 끊기
+      hasEnteredRoom.current = true;
       navigate(`/voice-room/${matchInfo.room}`, {
         state: { token, partnerData },
       });
@@ -129,7 +139,6 @@ export const WaitingRoom = () => {
         </div>
       ) : (
         <div className="text-center animate-fade-in-up">
-          {/* 상대방 프로필 이미지 */}
           {partnerData && (
             <div className="flex flex-col items-center mb-4">
               {partnerData.image_path ? (
@@ -158,7 +167,6 @@ export const WaitingRoom = () => {
               </div>
             </div>
           )}
-
           <p className="text-xl font-semibold text-[#336D92]">
             상대방을 찾았습니다!
           </p>

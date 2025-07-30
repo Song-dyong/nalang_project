@@ -20,6 +20,7 @@ class MatchCandidate(TypedDict):
 
 waiting_users: Dict[int, WebSocket] = {}
 matching_candidates: Dict[str, MatchCandidate] = {}
+entered_users: Set[int] = set()
 
 
 async def get_current_user_ws(websocket: WebSocket) -> User:
@@ -132,6 +133,11 @@ async def handle_receive_event(user: User, msg: dict):
     if room not in matching_candidates:
         return
 
+    if event == "entered":
+        entered_users.add(user.id)
+        print(f"[입장 완료] user_id={user.id}")
+        return
+
     if event == "accept":
         matching_candidates[room]["accepted"].add(user.id)
 
@@ -159,30 +165,33 @@ async def handle_receive_event(user: User, msg: dict):
 
 
 async def handle_disconnect(user_id: int):
-    # 대기열에 있던 유저 제거
     if user_id in waiting_users:
         del waiting_users[user_id]
-        await redis_client.delete(f"call:user:{user_id}")  # ✅ 이거 추가해야 함
+        await redis_client.delete(f"call:user:{user_id}")
         print(f"[대기열에서 제거 + Redis 삭제] user_id={user_id}")
 
-    # 매칭 진행 중이던 유저 처리
     to_remove = []
 
     for room, data in matching_candidates.items():
         if user_id in data["user_ids"]:
+            if user_id in entered_users:
+                print(f"[정상 입장 유저 → disconnected 전송 생략] user_id={user_id}")
+                to_remove.append(room)
+                continue
+
             for sock in data["sockets"]:
                 try:
                     await sock.send_json({"event": "disconnected"})
                 except Exception as e:
                     print(f"[disconnect 알림 실패] user={user_id}, err={e}")
-            await redis_client.delete(
-                f"call:user:{user_id}"
-            )  # ✅ 혹시 몰라 double check
+
+            await redis_client.delete(f"call:user:{user_id}")
             to_remove.append(room)
 
     for r in to_remove:
         del matching_candidates[r]
 
+    entered_users.discard(user_id)  # 종료 시 항상 정리
     print(f"[연결 종료 완료] user_id={user_id}")
 
 
