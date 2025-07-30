@@ -26,9 +26,9 @@ export const Home = () => {
         <InterestsList interests={user?.interests ?? []} />
         <button
           onClick={() => setIsFilterOpen(true)}
-          className="w-full bg-gray-100 hover:bg-gray-200 py-2 rounded-xl text-gray-700 font-medium"
+          className="w-[200px] bg-[#fca17d] hover:bg-[#fb8f65] py-2 rounded-[50px] text-gray-700 font-bold text-white"
         >
-          Filter
+          필터
         </button>
         <CallWaitingButton filters={filters} />
         <FilterBottomSheet

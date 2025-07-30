@@ -33,7 +33,7 @@ export const CallWaitingButton = ({ filters }: OwnProps) => {
   return (
     <button
       onClick={handleClick}
-      className="w-full bg-lime-100 hover:bg-lime-200 text-sky-300 py-2 rounded-[50px] transition font-bold"
+      className="w-[200px] bg-lime-100 hover:bg-lime-200 text-sky-300 py-2 rounded-[50px] transition font-bold"
     >
       대화상대 찾아보기
     </button>
