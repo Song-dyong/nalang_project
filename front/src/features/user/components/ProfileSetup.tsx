@@ -6,7 +6,9 @@ import { fetchSetupData } from "../slices/setupSlice";
 import { GenderSelector } from "./GenderSelector";
 import { InterestSelector } from "./InterestSelector";
 import { LanguageSelector } from "./LanguageSelector";
-import { updateUserProfile } from "../apis/setupApi";
+import { updateUserProfile, uploadProfileImage } from "../apis/setupApi";
+import newbie from "../../../assets/newbie.jpg";
+import { fetchMeThunk } from "../../auth/slices/authSlice";
 
 export const ProfileSetup = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -17,17 +19,37 @@ export const ProfileSetup = () => {
     (state: RootState) => state.setup
   );
 
-  console.log("user >>> ", user);
-
   const [selectedInterests, setSelectedInterests] = useState<number[]>([]);
   const [selectedLanguages, setSelectedLanguages] = useState<number[]>([]);
   const [selectedGenderId, setSelectedGenderId] = useState<number | null>(null);
   const [name, setName] = useState(user?.name ?? "");
-  const [preview, setPreview] = useState<string | undefined>(user?.image_path);
+  const [preview, setPreview] = useState<string | undefined>();
   const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    const validImageTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/gif",
+      "image/jpg",
+      "image/webp",
+    ];
+    const maxSizeImage = 10 * 1024 * 1024
+
+    if (!validImageTypes.includes(file.type)) {
+      alert("이미지 파일(jpg, png, gif, webp)만 업로드 가능합니다.");
+      return;
+    }
+
+    if (file.size > maxSizeImage) {
+      alert("이미지 파일은 최대 10MB까지 업로드 가능합니다.")
+      return
+    }
+
     if (file) {
       setImageFile(file);
       setPreview(URL.createObjectURL(file));
@@ -35,20 +57,27 @@ export const ProfileSetup = () => {
   };
 
   useEffect(() => {
+    setPreview(user?.image_path || newbie);
+    setName(user?.name || "");
     dispatch(fetchSetupData("ko"));
-  }, [dispatch]);
+  }, [dispatch, user]);
 
   const handleSubmit = async () => {
     const token = localStorage.getItem("access_token");
     if (!token) return alert("No Token");
 
     try {
+      if (imageFile) {
+        await uploadProfileImage(imageFile);
+      }
+
       await updateUserProfile({
         interests: selectedInterests,
         languages: selectedLanguages,
         gender_id: selectedGenderId,
       });
-      navigate("/home");
+      await dispatch(fetchMeThunk());
+      navigate("/profile");
     } catch {
       alert("설정 저장에 실패했습니다.");
     }
@@ -79,36 +108,28 @@ export const ProfileSetup = () => {
         </label>
       </div>
 
-      {/* 이름 */}
       <input
         type="text"
         value={name}
-        onChange={(e) => setName(e.target.value)}
         placeholder="이름을 입력하세요"
-        className="w-full border rounded px-4 py-2 text-gray-800"
+        className="w-full rounded px-4 py-2 text-gray-800 text-center"
+        disabled
       />
-
-      {/* 성별 선택 */}
       <GenderSelector
         genders={genders}
         selectedGenderId={selectedGenderId}
         onChange={setSelectedGenderId}
       />
-
-      {/* 관심사 */}
       <InterestSelector
         interests={interests}
         selectedInterests={selectedInterests}
         onChange={setSelectedInterests}
       />
-
-      {/* 언어 */}
       <LanguageSelector
         languages={languages}
         selectedLanguages={selectedLanguages}
         onChange={setSelectedLanguages}
       />
-
       <button
         onClick={handleSubmit}
         disabled={!selectedGenderId}

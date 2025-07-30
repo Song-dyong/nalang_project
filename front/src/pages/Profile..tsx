@@ -1,19 +1,22 @@
-import { useSelector } from "react-redux";
-import type { RootState } from "../stores/store";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../stores/store";
 import newbie from "../assets/newbie.jpg";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Phone, LogOut } from "lucide-react";
+import { logoutThunk } from "../features/auth/slices/authSlice";
 export const Profile = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
-  console.log(user);
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logoutThunk());
+    navigate("/login");
+  };
   return (
-    <div className="relative h-full bg-white flex flex-col items-center px-6 pt-10">
-      {/* 설정 버튼 */}
+    <div className="relative h-full flex flex-col items-center px-6 pt-10">
       <button
-        onClick={() => {
-          navigate("/login");
-        }}
+        onClick={handleLogout}
         className="absolute top-6 right-6 text-gray-500 hover:text-red-500 transition"
       >
         <LogOut size={24} />

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.utils import upload_image_to_s3
 from app.core.deps import get_locale
 from app.domains.auth.deps import get_current_user
 from app.domains.user.models.users import User
@@ -36,8 +37,33 @@ async def save_profile(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    await update_user_profile(db, user, data)
-    return {"message": "Profile updated successfully"}
+    try:
+        await update_user_profile(db, user, data)
+        return {"message": "Profile updated successfully"}
+    except Exception as e:
+        print("Server Response Error", e)
+        raise
+
+
+@router.post("/me/profile-image")
+async def upload_profile_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    allowed_types = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, detail="이미지 파일만 업로드할 수 있습니다."
+        )
+
+    image_url = await upload_image_to_s3(file, folder="profile_image")
+
+    current_user.profile_image = image_url
+    await db.commit()
+
+    return {"image_url": image_url}
 
 
 @router.get("/setup/interests", response_model=list[SetUpOption])

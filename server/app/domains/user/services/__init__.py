@@ -10,11 +10,22 @@ from sqlalchemy.future import select
 
 
 async def update_user_profile(db: AsyncSession, user: User, data: UserProfileUpdate):
-    user.interest_links.clear()
-    user.language_links.clear()
-    user.gender_links.clear()
+    # 🔸 기존 관심사 삭제
+    for link in user.interest_links:
+        await db.delete(link)
+    user.interest_links = []
 
-    # 관심사
+    # 🔸 기존 언어 삭제
+    for link in user.language_links:
+        await db.delete(link)
+    user.language_links = []
+
+    # 🔸 기존 성별 삭제
+    for link in user.gender_links:
+        await db.delete(link)
+    user.gender_links = []
+
+    # ✅ 새로운 관심사 추가
     for interest_id in data.interests:
         interest = await db.get(Interest, interest_id)
         if not interest:
@@ -23,7 +34,7 @@ async def update_user_profile(db: AsyncSession, user: User, data: UserProfileUpd
             )
         user.interest_links.append(UserInterest(user=user, interest=interest))
 
-    # 언어
+    # ✅ 새로운 언어 추가
     for language_id in data.languages:
         lang = await db.get(Language, language_id)
         if not lang:
@@ -32,7 +43,7 @@ async def update_user_profile(db: AsyncSession, user: User, data: UserProfileUpd
             )
         user.language_links.append(UserLanguage(user=user, language=lang))
 
-    # 성별 (optional)
+    # ✅ 새로운 성별 추가 (optional)
     if data.gender_id:
         gender = await db.get(Gender, data.gender_id)
         if not gender:
@@ -41,8 +52,14 @@ async def update_user_profile(db: AsyncSession, user: User, data: UserProfileUpd
             )
         user.gender_links.append(UserGender(user=user, gender=gender))
 
-    await db.commit()
-    await db.refresh(user)
+    # 커밋 및 갱신
+    try:
+        await db.commit()
+        await db.refresh(user)
+    except Exception as e:
+        print("DB COMMIT ERROR : ", e)
+        await db.rollback()
+        raise
 
 
 def translate(translations, locale: str) -> str:

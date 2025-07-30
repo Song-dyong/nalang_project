@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     FRONT_REDIRECT_URL: str
     LIVEKIT_API_KEY: str
     LIVEKIT_API_SECRET: str
+    AWS_ACCESS_KEY: str
+    AWS_SECRET_KEY: str
+    AWS_REGION: str
+    AWS_BUCKET_NAME: str
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

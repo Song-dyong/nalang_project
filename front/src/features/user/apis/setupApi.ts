@@ -43,3 +43,20 @@ export const fetchGenders = async (locale: string): Promise<SetupOption[]> => {
 export const updateUserProfile = async (data: ProfileUpdatePayload) => {
   await axiosInstance.post(`${API_ENDPOINT.USER}/me/profile`, data);
 };
+
+export const uploadProfileImage = async (file: File): Promise<string> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await axiosInstance.post(
+    `${API_ENDPOINT.USER}/me/profile-image`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data.image_url;
+};
