@@ -31,6 +31,16 @@ async def get_me(
     return await get_user_profile(db, user_with_relations, locale)
 
 
+@router.get("/{id}", response_model=UserProfileOut)
+async def get_partner(
+    id: int,
+    db: AsyncSession = Depends(get_db),
+    locale: str = Depends(get_locale),
+):
+    user_with_relations = await get_full_user_with_relations(db, id)
+    return await get_user_profile(db, user_with_relations, locale)
+
+
 @router.post("/me/profile")
 async def save_profile(
     data: UserProfileUpdate,
