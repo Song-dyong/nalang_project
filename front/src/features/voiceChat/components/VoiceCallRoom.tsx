@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { LiveKitRoom } from "@livekit/components-react";
 import { CustomRoomUI } from "./CustomRoomUI";
@@ -7,6 +7,7 @@ export const VoiceCallRoom = () => {
   const { roomName } = useParams<{ roomName: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isReady, setIsReady] = useState(false);
 
   const token = location.state?.token;
   const partnerData = location.state?.partnerData;
@@ -30,12 +31,13 @@ export const VoiceCallRoom = () => {
       connect
       video={false}
       onConnected={() => {
+        setIsReady(true);
         console.log("LiveKit Connected!!!");
       }}
       audio
       style={{ height: "70vh" }}
     >
-      <CustomRoomUI partnerData={partnerData} />
+      {isReady && <CustomRoomUI partnerData={partnerData} />}
     </LiveKitRoom>
   );
 };
