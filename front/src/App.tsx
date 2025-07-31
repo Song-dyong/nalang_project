@@ -1,4 +1,4 @@
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Router } from "./routes/router";
 import { RequireAuth } from "./features/auth/components/AuthRequire";
 import { useDispatch } from "react-redux";
@@ -15,11 +15,25 @@ function App() {
       dispatch(fetchMeThunk());
     }
   });
+
+  const isAuthenticated = () => {
+    return !!localStorage.getItem("access_token");
+  };
   return (
     <>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Landing />}>
+            <Route
+              index
+              element={
+                isAuthenticated() ? (
+                  <Navigate to="/home" replace />
+                ) : (
+                  <Navigate to="/login" replace />
+                )
+              }
+            />
             {Router.map((route) => (
               <Route
                 key={route.id}
@@ -27,14 +41,15 @@ function App() {
                 element={
                   route.requireAuth ? (
                     <RequireAuth>
-                      <route.element></route.element>
+                      <route.element />
                     </RequireAuth>
                   ) : (
-                    <route.element></route.element>
+                    <route.element />
                   )
                 }
               />
             ))}
+            <Route path="*" element={<Navigate to="/login" replace />} />
           </Route>
         </Routes>
       </BrowserRouter>

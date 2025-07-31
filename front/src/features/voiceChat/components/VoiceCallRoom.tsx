@@ -25,7 +25,7 @@ export const VoiceCallRoom = () => {
   return (
     <LiveKitRoom
       token={token}
-      connectOptions={{ autoSubscribe: false }}
+      connectOptions={{ autoSubscribe: true }}
       serverUrl={import.meta.env.VITE_LIVEKIT_WS_URL}
       connect
       video={false}

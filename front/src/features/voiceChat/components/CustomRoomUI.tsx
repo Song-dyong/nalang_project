@@ -75,6 +75,27 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
       room.off("dataReceived", handleData);
     };
   }, [room]);
+  // 🔊 Mic Volume 확인용 useEffect
+  useEffect(() => {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
+        const context = new AudioContext();
+        const source = context.createMediaStreamSource(stream);
+        const analyser = context.createAnalyser();
+        source.connect(analyser);
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount);
+        setInterval(() => {
+          analyser.getByteFrequencyData(dataArray);
+          const volume = dataArray.reduce((a, b) => a + b) / dataArray.length;
+          console.log("🎙️ Mic Volume Level:", volume);
+        }, 1000);
+      })
+      .catch((err) => {
+        console.warn("❌ 마이크 접근 실패:", err);
+      });
+  }, []);
 
   const handleLeave = () => {
     room.disconnect();
