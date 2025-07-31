@@ -36,3 +36,6 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+print("✅ Loaded ENV:", settings.model_config.get("env_file"))
+print("✅ DATABASE_URL:", repr(settings.DATABASE_URL))
+print("✅ REDIS_URL:", repr(settings.REDIS_URL))

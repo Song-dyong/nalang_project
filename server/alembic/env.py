@@ -15,8 +15,17 @@ target_metadata = Base.metadata
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+env_name = os.getenv("FASTAPI_ENV", "local")
+env_file = f".env.{env_name}"
+load_dotenv(env_file)
+print(f"✅ Loaded env file: {env_file}")
+
 sync_url = os.getenv("SYNC_DATABASE_URL")
+if not sync_url:
+    raise RuntimeError("❌ SYNC_DATABASE_URL 환경변수가 설정되지 않았습니다.")
+print(f"✅ SYNC_DATABASE_URL = {sync_url}")
 config.set_main_option("sqlalchemy.url", sync_url)
+
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

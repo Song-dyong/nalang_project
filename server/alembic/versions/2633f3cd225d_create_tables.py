@@ -1,8 +1,8 @@
-"""Switch to ORM-based user_interest / user_language / gender models
+"""create tables
 
-Revision ID: e89f3165c067
-Revises: fe0067e009c1
-Create Date: 2025-07-16 17:41:44.546693
+Revision ID: 2633f3cd225d
+Revises: 
+Create Date: 2025-07-31 13:51:53.770308
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e89f3165c067'
-down_revision: Union[str, Sequence[str], None] = 'fe0067e009c1'
+revision: str = '2633f3cd225d'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -40,6 +40,19 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('code')
     )
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('email', sa.String(), nullable=False),
+    sa.Column('hashed_password', sa.String(), nullable=True),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('profile_image', sa.String(), nullable=True),
+    sa.Column('provider', sa.String(), nullable=True),
+    sa.Column('birth_date', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=True),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
+    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_table('gender_translations',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('gender_id', sa.Integer(), nullable=True),
@@ -100,6 +113,9 @@ def downgrade() -> None:
     op.drop_table('language_translations')
     op.drop_table('interest_translations')
     op.drop_table('gender_translations')
+    op.drop_index(op.f('ix_users_id'), table_name='users')
+    op.drop_index(op.f('ix_users_email'), table_name='users')
+    op.drop_table('users')
     op.drop_table('languages')
     op.drop_index(op.f('ix_interests_id'), table_name='interests')
     op.drop_table('interests')
