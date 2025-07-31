@@ -1,8 +1,13 @@
-import { useRoomContext } from "@livekit/components-react";
+import {
+  useRoomContext,
+  useTracks,
+  VideoTrack,
+} from "@livekit/components-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UserProfileResponse } from "../../auth/types/authTypes";
 import { LogOut } from "lucide-react";
+import { Track } from "livekit-client";
 
 interface Props {
   partnerData?: UserProfileResponse;
@@ -11,6 +16,7 @@ interface Props {
 export const CustomRoomUI = ({ partnerData }: Props) => {
   const room = useRoomContext();
   const navigate = useNavigate();
+  const tracks = useTracks([Track.Source.Camera]);
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [remainingTime, setRemainingTime] = useState(300);
@@ -102,10 +108,10 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
 
       {/* 연장 버튼 */}
       <button
-        className="absolute top-4 left-4 text-xs bg-[#A6DAF4] hover:bg-[#91cfee] text-white px-3 py-1 rounded shadow"
+        className="absolute top-4 left-2 text-xs bg-[#A6DAF4] hover:bg-[#91cfee] text-white px-3 py-1 rounded shadow"
         onClick={handleExtend}
       >
-        ⏱ 5분 연장
+        ⏱5분연장
       </button>
 
       {/* 상대방 이미지 */}
@@ -137,7 +143,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
 
       {/* 성별 / 언어 / 관심사 구분 영역 */}
       <div className="mt-4 space-y-2 text-sm text-center">
-        {/* 성별 */}
         {partnerData?.gender && (
           <div className="flex justify-center items-center gap-2">
             <span>👤</span>
@@ -146,8 +151,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
             </span>
           </div>
         )}
-
-        {/* 언어 */}
         {partnerData?.languages?.length > 0 && (
           <div className="flex justify-center items-center gap-2 flex-wrap">
             <span>🗣</span>
@@ -161,8 +164,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
             ))}
           </div>
         )}
-
-        {/* 관심사 */}
         {partnerData?.interests?.length > 0 && (
           <div className="flex justify-center items-center gap-2 flex-wrap">
             <span>⭐</span>
@@ -187,7 +188,25 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         </span>
       </div>
 
-      <p className="mt-2 text-gray-500">통화 중입니다</p>
+      {/* 🔴 비디오 트랙 표시 */}
+      <div className="grid grid-cols-2 gap-4 p-4">
+        {tracks
+          .filter(
+            (
+              trackRef
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ): trackRef is Extract<typeof trackRef, { publication: any }> =>
+              !!trackRef.publication
+          )
+          .map((trackRef) => (
+            <div
+              key={`${trackRef.participant.identity}-${trackRef.publication.trackSid}`}
+              className="rounded overflow-hidden shadow bg-black w-48 h-32"
+            >
+              <VideoTrack trackRef={trackRef} />
+            </div>
+          ))}
+      </div>
     </div>
   );
 };
