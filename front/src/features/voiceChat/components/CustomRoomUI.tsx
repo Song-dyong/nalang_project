@@ -98,7 +98,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
 
   return (
     <div className="h-full w-full flex flex-col items-center justify-center bg-white relative px-4">
-      {/* 나가기 버튼 */}
       <button
         className="absolute top-4 right-4 text-sm hover:bg-gray-300 px-3 py-1 rounded flex items-center gap-1"
         onClick={handleLeave}
@@ -106,7 +105,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         <LogOut size={16} />
       </button>
 
-      {/* 연장 버튼 */}
       <button
         className="absolute top-4 left-2 text-xs bg-[#A6DAF4] hover:bg-[#91cfee] text-white px-3 py-1 rounded shadow"
         onClick={handleExtend}
@@ -114,7 +112,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         ⏱5분연장
       </button>
 
-      {/* 상대방 이미지 */}
       <div className="relative mb-4">
         {partnerData?.image_path ? (
           <img
@@ -135,13 +132,10 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
           </div>
         )}
       </div>
-
-      {/* 이름 */}
       <p className="text-xl font-bold text-[#336D92]">
         {partnerData?.name || "상대방"}
       </p>
 
-      {/* 성별 / 언어 / 관심사 구분 영역 */}
       <div className="mt-4 space-y-2 text-sm text-center">
         {partnerData?.gender && (
           <div className="flex justify-center items-center gap-2">
@@ -179,7 +173,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         )}
       </div>
 
-      {/* 남은 시간 */}
       <div className="mt-6 flex items-center gap-2 text-lg font-semibold text-[#548CA8]">
         <span>🕒</span>
         <span>
@@ -188,7 +181,6 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         </span>
       </div>
 
-      {/* 🔴 비디오 트랙 표시 */}
       <div className="grid grid-cols-2 gap-4 p-4">
         {tracks
           .filter(
