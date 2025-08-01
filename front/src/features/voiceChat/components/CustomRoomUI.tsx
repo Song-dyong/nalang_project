@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UserProfileResponse } from "../../auth/types/authTypes";
 import { LogOut } from "lucide-react";
-import { Track } from "livekit-client";
 
 interface Props {
   partnerData?: UserProfileResponse;
@@ -16,7 +15,7 @@ interface Props {
 export const CustomRoomUI = ({ partnerData }: Props) => {
   const room = useRoomContext();
   const navigate = useNavigate();
-  const tracks = useTracks([Track.Source.Camera]);
+  const tracks = useTracks(); // ✅ 전체 트랙 다 가져오기
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [remainingTime, setRemainingTime] = useState(300);
@@ -181,24 +180,14 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 p-4">
-        {tracks
-          .filter(
-            (
-              trackRef
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ): trackRef is Extract<typeof trackRef, { publication: any }> =>
-              !!trackRef.publication
-          )
-          .map((trackRef) => (
-            <div
-              key={`${trackRef.participant.identity}-${trackRef.publication.trackSid}`}
-              className="rounded overflow-hidden shadow bg-black w-48 h-32"
-            >
-              <VideoTrack trackRef={trackRef} />
-            </div>
-          ))}
-      </div>
+      {tracks.map((trackRef) => (
+        <div
+          key={`${trackRef.participant.identity}-${trackRef.publication.trackSid}`}
+          className="w-full max-w-md  mx-auto bg-black rounded overflow-hidden shadow"
+        >
+          <VideoTrack trackRef={trackRef} />
+        </div>
+      ))}
     </div>
   );
 };

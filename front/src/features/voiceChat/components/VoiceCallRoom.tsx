@@ -35,7 +35,7 @@ export const VoiceCallRoom = () => {
         setIsReady(true);
         console.log("LiveKit Connected!!!");
       }}
-      style={{ height: "75vh" }}
+      style={{ height: "95vh" }}
     >
       {isReady && <CustomRoomUI partnerData={partnerData} />}
     </LiveKitRoom>
