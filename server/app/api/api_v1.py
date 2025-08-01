@@ -6,6 +6,12 @@ from app.domains.call.routes_ws import router as ws_router
 
 router = APIRouter()
 
+
+@router.get("/health")
+async def health_check():
+    return {"message": "ok"}
+
+
 router.include_router(auth_router, prefix="/auth", tags=["Auth"])
 router.include_router(user_router, prefix="/user", tags=["User"])
 router.include_router(call_router, prefix="/call", tags=["Call"])
