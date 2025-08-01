@@ -181,12 +181,10 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
       </div>
 
       {tracks.map((trackRef) => (
-        <div
-          key={`${trackRef.participant.identity}-${trackRef.publication.trackSid}`}
-          className="w-full max-w-md  mx-auto bg-black rounded overflow-hidden shadow"
-        >
-          <VideoTrack trackRef={trackRef} />
-        </div>
+        <VideoTrack
+          trackRef={trackRef}
+          className="w-full rounded-[10%] object-cover"
+        />
       ))}
     </div>
   );
