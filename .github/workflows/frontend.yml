@@ -1,0 +1,58 @@
+name: 🚀 Deploy Frontend to S3
+
+on:
+  push:
+    paths:
+      - "front/**"
+      - ".github/workflows/frontend.yml"
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 📂 Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: 📦 Install dependencies
+        working-directory: front
+        run: npm ci
+      
+      - name: Generate .env.production
+        working-directory: front
+        run: |
+          echo "VITE_SERVER_URL=${{ secrets.VITE_SERVER_URL }}" >> .env.production
+          echo "VITE_LIVEKIT_WS_URL=${{ secrets.VITE_LIVEKIT_WS_URL }}" >> .env.production
+          echo "VITE_SERVER_WS_URL=${{ secrets.VITE_SERVER_WS_URL }}" >> .env.production
+          
+
+      - name: 🛠️ Build frontend
+        working-directory: front
+        run: npm run build
+
+      - name: ☁️ Sync to S3
+        uses: jakejarvis/s3-sync-action@master
+        with:
+          args: --delete
+        env:
+          AWS_S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SOURCE_DIR: front/dist
+
+      - name: 🚀 Invalidate CloudFront cache
+        uses: chetan/invalidate-cloudfront-action@v2
+        with:
+          distribution-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+          paths: "/*"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
