@@ -3,8 +3,8 @@ name: 🚀 Deploy Backend to EC2
 on:
   push:
     paths:
-      - 'server/**'
-      - '.github/workflows/backend.yml'
+      - "server/**"
+      - ".github/workflows/backend.yml"
     branches:
       - main
 
@@ -27,6 +27,6 @@ jobs:
             echo "✅ 서버 접속 성공"
             cd ~/nalang_project/server
             git pull origin main
-            source ../venv/bin/activate
+            source venv/bin/activate
             sudo systemctl restart fastapi
             echo "🚀 FastAPI 서버 재시작 완료"
