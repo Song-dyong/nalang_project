@@ -25,3 +25,4 @@ async def upload_image_to_s3(file: UploadFile, folder: str = "profile_image") ->
     )
 
     return f"https://{BUCKET_NAME}.s3.amazonaws.com/{filename}"
+
