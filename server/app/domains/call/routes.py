@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends
 from app.domains.call.services.livekit_service import (
     create_access_token,
     register_for_call_queue,
+    list_room,
+    delete_room_in_livekit,
 )
 from app.domains.user.models.users import User
 from app.domains.auth.deps import get_current_user
@@ -22,3 +24,11 @@ async def register_for_call_waiting(current_user: User = Depends(get_current_use
     return {"status": status}
 
 
+@router.delete("/room/{room_name}")
+async def delete_room_api(room_name: str):
+    return await delete_room_in_livekit(room_name)
+
+
+@router.get("/room/test")
+async def room_test():
+    await list_room()

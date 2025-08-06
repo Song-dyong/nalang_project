@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     NAVER_CLIENT_SECRET: str
     NAVER_REDIRECT_URI: str
     FRONT_REDIRECT_URL: str
+    LIVEKIT_URL: str
     LIVEKIT_API_KEY: str
     LIVEKIT_API_SECRET: str
     AWS_ACCESS_KEY: str

@@ -11,3 +11,8 @@ export const getPartnerData = async (id: number): Promise<UserProfileResponse> =
   const res = await axiosInstance.get(`${API_ENDPOINT.USER}/${id}`);
   return res.data;
 };
+
+export const deleteRoom = async (roomName: string): Promise<{deleted: string}> => {
+  const res = await axiosInstance.delete(`${API_ENDPOINT.CALL}/room/${roomName}`)
+  return res.data
+}
