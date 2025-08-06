@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UserProfileResponse } from "../../auth/types/authTypes";
 import { LogOut } from "lucide-react";
+import { deleteRoom } from "../apis/callApi";
 
 interface Props {
   partnerData?: UserProfileResponse;
@@ -52,9 +53,18 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
   // 타이머
   useEffect(() => {
     if (remainingTime <= 0) {
-      alert("통화 시간이 종료되었습니다.");
-      room.disconnect();
-      navigate("/home");
+      const cleanupAndLeave = async () => {
+        try {
+          const roomName = room.name;
+          await deleteRoom(roomName);
+        } catch (e) {
+          console.warn("방 삭제 중 오류:", e);
+        } finally {
+          room.disconnect();
+          navigate("/home");
+        }
+      };
+      cleanupAndLeave();
       return;
     }
     const timer = setTimeout(() => setRemainingTime((t) => t - 1), 1000);
@@ -81,9 +91,16 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
     };
   }, [room]);
 
-  const handleLeave = () => {
-    room.disconnect();
-    navigate("/home");
+  const handleLeave = async () => {
+    try {
+      const roomName = room.name;
+      await deleteRoom(roomName);
+    } catch (e) {
+      console.warn("방 삭제 오류", e);
+    } finally {
+      room.disconnect();
+      navigate("/home");
+    }
   };
 
   const handleExtend = () => {
