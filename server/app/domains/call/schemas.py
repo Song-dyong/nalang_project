@@ -19,3 +19,18 @@ class CallHistoryCreate(BaseModel):
     summary_text: Optional[str] = None
 
     model_config = {"from_attributes": True}
+
+
+class PartnerInfo(BaseModel):
+    id: int
+    name: str
+    profile_image: Optional[str]
+
+
+class CallHistoryList(BaseModel):
+    id: int
+    room_name: str
+    started_at: datetime
+    ended_at: datetime
+    duration_sec: int
+    partner: PartnerInfo

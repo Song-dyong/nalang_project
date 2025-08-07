@@ -1,6 +1,7 @@
 import { LoginPage } from "../features/auth/pages/LoginPage";
 import { RegisterPage } from "../features/auth/pages/RegisterPage";
 import { SocialCallbackPage } from "../features/auth/pages/SocialCallbackPage";
+import { CallHistoryPage } from "../features/user/pages/callHistoryPage";
 import { ProfileSetupPage } from "../features/user/pages/ProfileSetupPage";
 import { VoiceCallPage } from "../features/voiceChat/pages/VoiceCallPage";
 import { WaitingRoom } from "../features/voiceChat/pages/WaitingRoom";
@@ -86,6 +87,13 @@ export const Router = [
     name: "Waiting",
     path: "/waiting",
     element: WaitingRoom,
+    requireAuth: true,
+  },
+  {
+    id: 11,
+    name: "History",
+    path: "/profile/history",
+    element: CallHistoryPage,
     requireAuth: true,
   },
 ];

@@ -22,4 +22,9 @@ export interface CallHistoryResponse {
   transcript_url?: string;
   summary_text?: string;
   created_at: Date;
+  partner: {
+    id: number;
+    name: string;
+    profile_image?: string;
+  };
 }

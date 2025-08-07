@@ -4,9 +4,13 @@ from livekit.api import LiveKitAPI, ListRoomsRequest, DeleteRoomRequest
 from app.db.redis import redis_client
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.domains.call.schemas import CallHistoryCreate
+from app.domains.call.schemas import CallHistoryCreate, CallHistoryList
 from app.domains.call.models.call_history import CallHistory
 from app.domains.call.crud import create_call_history as crud
+from app.domains.user.models.users import User
+from typing import List
+from sqlalchemy import select
+from sqlalchemy.orm import aliased, selectinload
 
 
 def create_access_token(identity: str, room_name: str) -> str:
@@ -73,3 +77,28 @@ async def create_call_history_with_check(
             status_code=404, detail=f"Failed create record, 0초 이상 필요"
         )
     return await crud(db, history_data)
+
+
+async def get_history_list(user: User, db: AsyncSession) -> List[CallHistoryList]:
+    Partner = aliased(User)
+
+    result = await db.execute(
+        select(CallHistory, Partner)
+        .join(Partner, CallHistory.partner_id == Partner.id)
+        .where(CallHistory.user_id == user.id)
+        .order_by(CallHistory.created_at.desc())
+    )
+
+    rows = result.all()
+
+    return [
+        {
+            "id": ch.id,
+            "room_name": ch.room_name,
+            "started_at": ch.started_at,
+            "ended_at": ch.ended_at,
+            "duration_sec": ch.duration_sec,
+            "partner": {"id": p.id, "name": p.name, "profile_image": p.profile_image},
+        }
+        for ch, p in rows
+    ]

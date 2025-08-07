@@ -11,7 +11,10 @@ from app.domains.call.schemas import TokenRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
 from app.domains.call.schemas import CallHistoryCreate
-from app.domains.call.services.livekit_service import create_call_history_with_check
+from app.domains.call.services.livekit_service import (
+    create_call_history_with_check,
+    get_history_list,
+)
 
 router = APIRouter()
 
@@ -43,3 +46,10 @@ async def record_call(
     history_data: CallHistoryCreate, db: AsyncSession = Depends(get_db)
 ):
     return await create_call_history_with_check(db, history_data)
+
+
+@router.get("/history")
+async def history_list(
+    current_user: User = Depends(get_current_user), db: AsyncSession = Depends(get_db)
+):
+    return await get_history_list(current_user, db)

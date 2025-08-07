@@ -33,3 +33,10 @@ export const recordHistory = async (
   const res = await axiosInstance.post(`${API_ENDPOINT.CALL}/record`, data);
   return res.data;
 };
+
+export const fetchCallHistories = async (): Promise<CallHistoryResponse[]> => {
+  const res = await axiosInstance.get<CallHistoryResponse[]>(
+    `${API_ENDPOINT.CALL}/history`
+  );
+  return res.data;
+};

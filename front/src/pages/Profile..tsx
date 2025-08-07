@@ -42,7 +42,10 @@ export const Profile = () => {
 
       {/* 통화 기록 메뉴 */}
       <div className="w-full mt-10 border-t">
-        <button className="w-full flex items-center py-4 border-b px-4">
+        <button
+          className="w-full flex items-center py-4 border-b px-4"
+          onClick={() => navigate("/profile/history")}
+        >
           <Phone className="w-5 h-5 mr-3 text-gray-500" />
           <span className="text-gray-700 font-medium">통화 기록</span>
         </button>
