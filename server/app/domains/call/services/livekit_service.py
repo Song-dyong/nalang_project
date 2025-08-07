@@ -3,6 +3,10 @@ from livekit import api
 from livekit.api import LiveKitAPI, ListRoomsRequest, DeleteRoomRequest
 from app.db.redis import redis_client
 from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.domains.call.schemas import CallHistoryCreate
+from app.domains.call.models.call_history import CallHistory
+from app.domains.call.crud import create_call_history as crud
 
 
 def create_access_token(identity: str, room_name: str) -> str:
@@ -59,3 +63,13 @@ async def list_room():
     except Exception as e:
         print("❌ Error occurred:", str(e))
         return {"error": str(e)}
+
+
+async def create_call_history_with_check(
+    db: AsyncSession, history_data: CallHistoryCreate
+) -> CallHistory:
+    if history_data.duration_sec <= 0:
+        raise HTTPException(
+            status_code=404, detail=f"Failed create record, 0초 이상 필요"
+        )
+    return await crud(db, history_data)

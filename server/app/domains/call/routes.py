@@ -8,6 +8,10 @@ from app.domains.call.services.livekit_service import (
 from app.domains.user.models.users import User
 from app.domains.auth.deps import get_current_user
 from app.domains.call.schemas import TokenRequest
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.db.database import get_db
+from app.domains.call.schemas import CallHistoryCreate
+from app.domains.call.services.livekit_service import create_call_history_with_check
 
 router = APIRouter()
 
@@ -32,3 +36,10 @@ async def delete_room_api(room_name: str):
 @router.get("/room/test")
 async def room_test():
     await list_room()
+
+
+@router.post("/record")
+async def record_call(
+    history_data: CallHistoryCreate, db: AsyncSession = Depends(get_db)
+):
+    return await create_call_history_with_check(db, history_data)

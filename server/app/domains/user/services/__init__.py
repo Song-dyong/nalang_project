@@ -84,6 +84,7 @@ async def get_user_profile(db: AsyncSession, user: User, lang: str) -> UserProfi
         gender = translate(gender_translations, lang)
 
     return UserProfileOut(
+        id=user.id,
         name=user.name,
         email=user.email,
         interests=interests,

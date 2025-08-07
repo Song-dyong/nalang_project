@@ -21,6 +21,7 @@ class UserProfileUpdate(BaseModel):
 
 
 class UserProfileOut(BaseModel):
+    id: int
     name: str
     email: str
     interests: List[str]

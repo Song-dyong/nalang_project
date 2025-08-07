@@ -7,7 +7,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import type { UserProfileResponse } from "../../auth/types/authTypes";
 import { LogOut } from "lucide-react";
-import { deleteRoom } from "../apis/callApi";
+import { deleteRoom, recordHistory } from "../apis/callApi";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../stores/store";
 
 interface Props {
   partnerData?: UserProfileResponse;
@@ -16,15 +18,42 @@ interface Props {
 export const CustomRoomUI = ({ partnerData }: Props) => {
   const room = useRoomContext();
   const navigate = useNavigate();
-  const tracks = useTracks(); // ✅ 전체 트랙 다 가져오기
+  const tracks = useTracks(); 
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [remainingTime, setRemainingTime] = useState(300);
   const [extended, setExtended] = useState(false);
 
+  const startedAt = useState(() => new Date())[0];
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  // CallHistory
+  const saveHistory = async () => {
+    if (!user || !partnerData) return;
+
+    const endedAt = new Date();
+    const durationSec = Math.floor(
+      (endedAt.getTime() - startedAt.getTime()) / 1000
+    );
+
+    try {
+      await recordHistory({
+        user_id: user.id,
+        partner_id: partnerData.id,
+        room_name: room.name,
+        started_at: startedAt.toISOString(),
+        ended_at: endedAt.toISOString(),
+        duration_sec: durationSec,
+      });
+    } catch (e) {
+      console.error("Recording Fail", e);
+    }
+  };
+
   // 상대방 퇴장 감지
   useEffect(() => {
     const handleParticipantDisconnected = () => {
+      saveHistory();
       alert("상대방이 나갔습니다. 홈으로 돌아갑니다.");
       room.disconnect();
       navigate("/home");
@@ -60,6 +89,7 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         } catch (e) {
           console.warn("방 삭제 중 오류:", e);
         } finally {
+          saveHistory();
           room.disconnect();
           navigate("/home");
         }
@@ -98,6 +128,7 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
     } catch (e) {
       console.warn("방 삭제 오류", e);
     } finally {
+      saveHistory();
       room.disconnect();
       navigate("/home");
     }

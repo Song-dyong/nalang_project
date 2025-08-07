@@ -10,6 +10,7 @@ export interface UserResponse {
   access_token: string;
   refresh_token: string;
   user: {
+    id: number;
     email: string;
     name: string;
     interests: List[string];
@@ -31,6 +32,7 @@ export interface TokenResponse {
 }
 
 export interface UserProfileResponse {
+  id: number;
   name: string;
   email: string;
   interests: List[str];
