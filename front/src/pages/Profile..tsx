@@ -4,6 +4,7 @@ import newbie from "../assets/newbie.jpg";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Phone, LogOut } from "lucide-react";
 import { logoutThunk } from "../features/auth/slices/authSlice";
+
 export const Profile = () => {
   const dispatch = useDispatch<AppDispatch>();
   const user = useSelector((state: RootState) => state.auth.user);
@@ -13,8 +14,10 @@ export const Profile = () => {
     dispatch(logoutThunk());
     navigate("/login");
   };
+
   return (
     <div className="relative h-full flex flex-col items-center px-6 pt-10">
+      {/* 로그아웃 버튼 */}
       <button
         onClick={handleLogout}
         className="absolute top-6 right-6 text-gray-500 hover:text-red-500 transition"
@@ -22,6 +25,7 @@ export const Profile = () => {
         <LogOut size={24} />
       </button>
 
+      {/* 프로필 이미지 */}
       <div className="relative">
         <img
           src={user?.image_path || newbie}
@@ -41,13 +45,18 @@ export const Profile = () => {
       </p>
 
       {/* 통화 기록 메뉴 */}
-      <div className="w-full mt-10 border-t">
+      <div className="w-full mt-10">
         <button
-          className="w-full flex items-center py-4 border-b px-4"
+          className="w-full flex items-center gap-3 px-4 py-4 
+      bg-white text-gray-700 font-medium shadow 
+      rounded-[30px] ring-1 ring-gray-200
+      hover:bg-indigo-50 hover:text-indigo-600 
+      active:bg-indigo-100 active:text-indigo-700
+      transition-colors duration-200"
           onClick={() => navigate("/profile/history")}
         >
-          <Phone className="w-5 h-5 mr-3 text-gray-500" />
-          <span className="text-gray-700 font-medium">통화 기록</span>
+          <Phone className="w-5 h-5 text-gray-500" />
+          <span>통화 기록</span>
         </button>
       </div>
     </div>

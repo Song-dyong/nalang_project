@@ -1,12 +1,10 @@
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../stores/store";
-import { Sparkles } from "lucide-react";
 import { fetchCallHistoriesThunk } from "../../voiceChat/slices/callSlice";
 
 export const CallHistoryPage = () => {
   const dispatch = useDispatch<AppDispatch>();
-
   const { histories, loading, error } = useSelector(
     (state: RootState) => state.call
   );
@@ -50,39 +48,27 @@ export const CallHistoryPage = () => {
           return (
             <div
               key={history.id}
-              className="flex items-center bg-white rounded-xl shadow-sm hover:shadow-md transition p-4"
+              className="flex bg-white rounded-xl shadow-sm hover:shadow-md transition p-4"
             >
-              {/* Partner Image */}
+              {/* 프로필 이미지 */}
               <img
                 src={history.partner.profile_image}
                 alt={history.partner.name}
                 className="w-16 h-16 rounded-full object-cover mr-4 border-2 border-[#F6D14A]"
               />
 
-              {/* Info Section */}
-              <div className="flex-1">
-                <div className="flex justify-between items-center">
-                  <p className="font-bold text-md">{history.partner.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {formattedDate} {formattedTime}
-                  </p>
-                </div>
-
-                <div className="text-sm text-gray-700 mt-1">
-                  <span className="font-semibold">통화시간:</span>{" "}
-                  {Math.floor(history.duration_sec / 60)}분{" "}
+              {/* 오른쪽 텍스트 영역 */}
+              <div className="flex flex-col justify-center">
+                <p className="text-md font-bold mb-1 break-words w-44">
+                  {history.partner.name}
+                </p>
+                <p className="text-sm text-gray-700">
+                  통화시간: {Math.floor(history.duration_sec / 60)}분{" "}
                   {history.duration_sec % 60}초
-                </div>
-
-                {history.summary_text && (
-                  <div className="mt-2 text-sm text-gray-800 bg-indigo-50 rounded-xl p-3 flex items-start gap-2">
-                    <Sparkles className="w-4 h-4 mt-0.5 text-indigo-400" />
-                    <div>
-                      <span className="font-bold text-indigo-500">요약:</span>{" "}
-                      {history.summary_text}
-                    </div>
-                  </div>
-                )}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {formattedDate} {formattedTime}
+                </p>
               </div>
             </div>
           );

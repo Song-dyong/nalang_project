@@ -22,7 +22,7 @@ export const Home = () => {
       style={{ backgroundImage: `url(${phone})` }}
     >
       <div className="mt-auto w-full max-w-md bg-white p-6 rounded-t-[30px] shadow-md text-center space-y-4 relative">
-        <p className="text-gray-500 text-sm">{user?.name}TEST</p>
+        <p className="text-gray-500 text-sm">{user?.name}</p>
         <InterestsList interests={user?.interests ?? []} />
         <button
           onClick={() => setIsFilterOpen(true)}

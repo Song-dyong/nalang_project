@@ -18,7 +18,7 @@ interface Props {
 export const CustomRoomUI = ({ partnerData }: Props) => {
   const room = useRoomContext();
   const navigate = useNavigate();
-  const tracks = useTracks(); 
+  const tracks = useTracks();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [remainingTime, setRemainingTime] = useState(300);
