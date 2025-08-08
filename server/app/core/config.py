@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     AWS_SECRET_KEY: str
     AWS_REGION: str
     AWS_BUCKET_NAME: str
+    CALL_RECORD_API: str
 
     model_config = SettingsConfigDict(
         env_file=f".env.{os.getenv('FASTAPI_ENV', 'local')}", extra="ignore"

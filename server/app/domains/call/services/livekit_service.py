@@ -102,3 +102,4 @@ async def get_history_list(user: User, db: AsyncSession) -> List[CallHistoryList
         }
         for ch, p in rows
     ]
+
