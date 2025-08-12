@@ -30,12 +30,11 @@ export const VoiceCallRoom = () => {
       serverUrl={import.meta.env.VITE_LIVEKIT_WS_URL}
       connect
       audio={true}
-      video={true}
       onConnected={() => {
         setIsReady(true);
         console.log("LiveKit Connected!!!");
       }}
-      // style={{ height: "95vh" }}
+      style={{ height: "75vh" }}
     >
       {isReady && <CustomRoomUI partnerData={partnerData} />}
     </LiveKitRoom>
