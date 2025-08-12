@@ -1,7 +1,7 @@
 import {
   useRoomContext,
-  useTracks,
-  VideoTrack,
+  // useTracks,
+  // VideoTrack,
 } from "@livekit/components-react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,7 @@ interface Props {
 export const CustomRoomUI = ({ partnerData }: Props) => {
   const room = useRoomContext();
   const navigate = useNavigate();
-  const tracks = useTracks();
+  // const tracks = useTracks();
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [remainingTime, setRemainingTime] = useState(300);
@@ -228,12 +228,12 @@ export const CustomRoomUI = ({ partnerData }: Props) => {
         </span>
       </div>
 
-      {tracks.map((trackRef) => (
+      {/* {tracks.map((trackRef) => (
         <VideoTrack
           trackRef={trackRef}
           className="w-full rounded-[10%] object-cover"
         />
-      ))}
+      ))} */}
     </div>
   );
 };
