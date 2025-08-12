@@ -29,4 +29,5 @@ jobs:
             git pull origin main
             source venv/bin/activate
             sudo systemctl restart fastapi
+            sudo systemctl restart agent
             echo "🚀 FastAPI 서버 재시작 완료"

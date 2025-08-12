@@ -1,6 +1,5 @@
 # agent/agent.py
 import os
-import json
 import asyncio
 from datetime import datetime, timezone
 
@@ -15,6 +14,7 @@ from livekit.agents.cli.cli import run_app
 # (선택) .env 자동 로드
 try:
     from dotenv import load_dotenv
+
     load_dotenv()
 except Exception:
     pass
@@ -27,7 +27,6 @@ S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 
 CALL_RECORD_API = os.getenv("CALL_RECORD_API")  # 예: http://localhost:8000/call/record
 AUDIO_PREFIX = os.getenv("AUDIO_PREFIX", "recordings/")
-TRANSCRIPT_PREFIX = os.getenv("TRANSCRIPT_PREFIX", "transcripts/")
 WAIT_FOR_PARTICIPANT = os.getenv("WAIT_FOR_PARTICIPANT", "true").lower() == "true"
 
 # ---------- boto3 ----------
@@ -38,16 +37,6 @@ s3 = boto3.client(
     region_name=S3_REGION,
 )
 
-# ---------- Whisper ----------
-# 설치: poetry add openai-whisper@20231117 torch
-# ffmpeg 필요: ffmpeg -version
-import whisper
-_WHISPER_MODEL = None
-def get_whisper_model():
-    global _WHISPER_MODEL
-    if _WHISPER_MODEL is None:
-        _WHISPER_MODEL = whisper.load_model("base")
-    return _WHISPER_MODEL
 
 # ---------- Utils ----------
 async def wait_s3_object_exists(bucket: str, key: str, timeout_sec: int = 300) -> bool:
@@ -63,6 +52,7 @@ async def wait_s3_object_exists(bucket: str, key: str, timeout_sec: int = 300) -
                 continue
             raise
     return False
+
 
 # ---------- Entrypoint ----------
 async def entrypoint(ctx: JobContext):
@@ -87,16 +77,20 @@ async def entrypoint(ctx: JobContext):
     ts = start_time.strftime("%Y%m%d_%H%M%S")
     audio_basename = f"{room_name}_{ts}.ogg"
     audio_s3_key = f"{AUDIO_PREFIX}{audio_basename}"
-    transcript_basename = f"transcript_{room_name}_{ts}.json"
-    transcript_s3_key = f"{TRANSCRIPT_PREFIX}{transcript_basename}"
 
-    # 오디오만 Egress → S3
+    # 오디오만 Egress → S3 (경량 인코딩 옵션)
     egress_req = api.RoomCompositeEgressRequest(
         room_name=room_name,
         audio_only=True,
+        options=api.EncodingOptions(
+            audio_codec=api.AudioCodec.OPUS,  # Opus 권장
+            audio_bitrate=24000,  # 16~32kbps 권장
+            audio_channels=1,  # 모노
+            audio_sample_rate=16000,  # 16 kHz
+        ),
         file_outputs=[
             api.EncodedFileOutput(
-                file_type=api.EncodedFileType.OGG,
+                file_type=api.EncodedFileType.OGG,  # OGG(Opus)
                 filepath=audio_s3_key,
                 s3=api.S3Upload(
                     bucket=S3_BUCKET,
@@ -107,6 +101,7 @@ async def entrypoint(ctx: JobContext):
             )
         ],
     )
+
     res = await ctx.api.egress.start_room_composite_egress(egress_req)
     egress_id = res.egress_id
     print(f"[Egress] started id={egress_id}, s3://{S3_BUCKET}/{audio_s3_key}")
@@ -132,7 +127,6 @@ async def entrypoint(ctx: JobContext):
                             "ended_at": end_time.isoformat(),
                             "duration": duration_sec,
                             "audio_url": audio_url,
-                            "transcript_url": None,
                             "note": "egress file not found in time",
                         },
                         timeout=10,
@@ -141,52 +135,13 @@ async def entrypoint(ctx: JobContext):
                     print("[API] call/record failed:", e)
             return
 
-        local_audio = f"/tmp/{audio_basename}"
-        local_transcript = f"/tmp/{transcript_basename}"
-
-        # 다운로드
-        try:
-            s3.download_file(S3_BUCKET, audio_s3_key, local_audio)
-            print(f"[S3] downloaded → {local_audio}")
-        except Exception as e:
-            print("[S3] download failed:", e)
-            return
-
-        # Whisper 전사
-        try:
-            model = get_whisper_model()
-            result = model.transcribe(local_audio)
-            with open(local_transcript, "w", encoding="utf-8") as f:
-                json.dump(result, f, ensure_ascii=False, indent=2)
-            print(f"[Whisper] transcript saved → {local_transcript}")
-        except Exception as e:
-            print("[Whisper] transcription failed:", e)
-            if CALL_RECORD_API:
-                try:
-                    requests.post(
-                        CALL_RECORD_API,
-                        json={
-                            "room_name": room_name,
-                            "started_at": start_time.isoformat(),
-                            "ended_at": end_time.isoformat(),
-                            "duration": duration_sec,
-                            "audio_url": audio_url,
-                            "transcript_url": None,
-                            "note": "transcription failed",
-                        },
-                        timeout=10,
-                    )
-                except Exception as e2:
-                    print("[API] call/record failed:", e2)
-            return
-
-        # transcript 업로드
-        transcript_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{transcript_s3_key}"
-        try:
-            s3.upload_file(local_transcript, S3_BUCKET, transcript_s3_key)
-            print(f"[S3] transcript uploaded → s3://{S3_BUCKET}/{transcript_s3_key}")
-        except Exception as e:
-            print("[S3] upload transcript failed:", e)
+        # (선택) 로컬로 받아서 후처리할 일이 없으면 아래 다운로드는 생략 가능
+        # local_audio = f"/tmp/{audio_basename}"
+        # try:
+        #     s3.download_file(S3_BUCKET, audio_s3_key, local_audio)
+        #     print(f"[S3] downloaded → {local_audio}")
+        # except Exception as e:
+        #     print("[S3] download failed:", e)
 
         # 기록 API
         if CALL_RECORD_API:
@@ -199,7 +154,6 @@ async def entrypoint(ctx: JobContext):
                         "ended_at": end_time.isoformat(),
                         "duration": duration_sec,
                         "audio_url": audio_url,
-                        "transcript_url": transcript_url,
                     },
                     timeout=10,
                 )
@@ -207,16 +161,14 @@ async def entrypoint(ctx: JobContext):
             except Exception as e:
                 print("[API] call/record failed:", e)
 
-        # 임시파일 정리
-        for p in (local_audio, local_transcript):
-            try:
-                os.remove(p)
-            except FileNotFoundError:
-                pass
+        # (다운로드를 했다면) 임시파일 정리
+        # try:
+        #     os.remove(local_audio)
+        # except Exception:
+        #     pass
 
     ctx.add_shutdown_callback(on_shutdown)
     # 이후는 참가자 퇴장 시 shutdown 콜백 실행
-    # 별도 while/await 불필요
 
 
 if __name__ == "__main__":
