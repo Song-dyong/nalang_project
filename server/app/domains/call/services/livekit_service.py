@@ -18,7 +18,15 @@ def create_access_token(identity: str, room_name: str) -> str:
         api.AccessToken(settings.LIVEKIT_API_KEY, settings.LIVEKIT_API_SECRET)
         .with_identity(identity)
         .with_name(identity)
-        .with_grants(api.VideoGrants(room_join=True, room=room_name))
+        .with_grants(
+            api.VideoGrants(
+                room_join=True,
+                room=room_name,
+                can_subscribe=True,
+                can_publish=True,
+                can_publish_data=True,
+            )
+        )
     )
     return token.to_jwt()
 
@@ -102,4 +110,3 @@ async def get_history_list(user: User, db: AsyncSession) -> List[CallHistoryList
         }
         for ch, p in rows
     ]
-
