@@ -83,10 +83,8 @@ async def entrypoint(ctx: JobContext):
         room_name=room_name,
         audio_only=True,
         options=api.EncodingOptions(
-            audio_codec=api.AudioCodec.OPUS,  # Opus 권장
-            audio_bitrate=24000,  # 16~32kbps 권장
-            audio_channels=1,  # 모노
-            audio_sample_rate=16000,  # 16 kHz
+            audio_codec=api.AudioCodec.OPUS,
+            audio_bitrate=24000,
         ),
         file_outputs=[
             api.EncodedFileOutput(
