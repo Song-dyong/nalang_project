@@ -1,32 +1,36 @@
-name: 🚀 Deploy Backend to EC2
+name: 🚀 Deploy Agent to EC2
 
 on:
   push:
+    branches: [main]
     paths:
       - "agent/**"
       - ".github/workflows/agent.yml"
-    branches:
-      - main
 
 jobs:
   deploy:
-    name: 🔁 Deploy FastAPI to EC2
+    name: 🔁 Deploy Agent to EC2
     runs-on: ubuntu-latest
-
     steps:
       - name: 📦 Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 🔐 Connect to EC2 & Deploy
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
+          script_stop: true
           script: |
+            set -e
             echo "✅ 서버 접속 성공"
             cd ~/nalang_project/agent
-            git pull origin main
-            source ../server/venv/bin/activate
+            git fetch --all
+            git reset --hard origin/main
+            if [ -f requirements.txt ]; then
+              ~/nalang_project/server/venv/bin/pip install -r requirements.txt
+            fi
             sudo systemctl restart agent
-            echo "🚀 AGENT 서버 재시작 완료"
+            sudo systemctl status agent --no-pager -l | head -n 50
+            echo "🚀 Agent 재시작 완료"
