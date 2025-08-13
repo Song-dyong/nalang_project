@@ -3,8 +3,8 @@ name: 🚀 Deploy Backend to EC2
 on:
   push:
     paths:
-      - "server/**"
-      - ".github/workflows/backend.yml"
+      - "agent/**"
+      - ".github/workflows/agent.yml"
     branches:
       - main
 
@@ -25,8 +25,8 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           script: |
             echo "✅ 서버 접속 성공"
-            cd ~/nalang_project/server
+            cd ~/nalang_project/agent
             git pull origin main
-            source venv/bin/activate
-            sudo systemctl restart fastapi
-            echo "🚀 FastAPI 서버 재시작 완료"
+            source ../server/venv/bin/activate
+            sudo systemctl restart agent
+            echo "🚀 AGENT 서버 재시작 완료"
