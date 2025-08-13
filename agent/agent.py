@@ -11,7 +11,6 @@ from livekit import api
 from livekit.agents import JobContext, WorkerOptions
 from livekit.agents.cli.cli import run_app
 
-# (선택) .env 자동 로드
 try:
     from dotenv import load_dotenv
 
@@ -25,7 +24,7 @@ S3_REGION = os.getenv("S3_REGION")
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY")
 
-CALL_RECORD_API = os.getenv("CALL_RECORD_API")  # 예: http://localhost:8000/call/record
+CALL_RECORD_API = os.getenv("CALL_RECORD_API")
 AUDIO_PREFIX = os.getenv("AUDIO_PREFIX", "recordings/")
 WAIT_FOR_PARTICIPANT = os.getenv("WAIT_FOR_PARTICIPANT", "true").lower() == "true"
 
@@ -84,7 +83,7 @@ async def entrypoint(ctx: JobContext):
         audio_only=True,
         advanced=api.EncodingOptions(
             audio_codec=api.AudioCodec.OPUS,
-            audio_bitrate=24000,
+            audio_bitrate=24,
         ),
         file_outputs=[
             api.EncodedFileOutput(
@@ -115,58 +114,23 @@ async def entrypoint(ctx: JobContext):
         audio_url = f"https://{S3_BUCKET}.s3.{S3_REGION}.amazonaws.com/{audio_s3_key}"
         if not ok:
             print(f"[S3] timeout waiting for s3://{S3_BUCKET}/{audio_s3_key}")
-            if CALL_RECORD_API:
-                try:
-                    requests.post(
-                        CALL_RECORD_API,
-                        json={
-                            "room_name": room_name,
-                            "started_at": start_time.isoformat(),
-                            "ended_at": end_time.isoformat(),
-                            "duration": duration_sec,
-                            "audio_url": audio_url,
-                            "note": "egress file not found in time",
-                        },
-                        timeout=10,
-                    )
-                except Exception as e:
-                    print("[API] call/record failed:", e)
             return
 
-        # (선택) 로컬로 받아서 후처리할 일이 없으면 아래 다운로드는 생략 가능
-        # local_audio = f"/tmp/{audio_basename}"
-        # try:
-        #     s3.download_file(S3_BUCKET, audio_s3_key, local_audio)
-        #     print(f"[S3] downloaded → {local_audio}")
-        # except Exception as e:
-        #     print("[S3] download failed:", e)
-
         # 기록 API
-        if CALL_RECORD_API:
-            try:
-                resp = requests.post(
-                    CALL_RECORD_API,
-                    json={
-                        "room_name": room_name,
-                        "started_at": start_time.isoformat(),
-                        "ended_at": end_time.isoformat(),
-                        "duration": duration_sec,
-                        "audio_url": audio_url,
-                    },
-                    timeout=10,
-                )
-                print("[API] call/record status:", resp.status_code)
-            except Exception as e:
-                print("[API] call/record failed:", e)
-
-        # (다운로드를 했다면) 임시파일 정리
-        # try:
-        #     os.remove(local_audio)
-        # except Exception:
-        #     pass
+        try:
+            resp = requests.put(
+                CALL_RECORD_API,
+                json={
+                    "room_name": room_name,
+                    "recording_url": audio_url,
+                },
+                timeout=10,
+            )
+            print("[API] call/record status:", resp.status_code)
+        except Exception as e:
+            print("[API] call/record failed:", e)
 
     ctx.add_shutdown_callback(on_shutdown)
-    # 이후는 참가자 퇴장 시 shutdown 콜백 실행
 
 
 if __name__ == "__main__":

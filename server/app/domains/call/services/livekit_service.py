@@ -4,12 +4,12 @@ from livekit.api import LiveKitAPI, ListRoomsRequest, DeleteRoomRequest
 from app.db.redis import redis_client
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.domains.call.schemas import CallHistoryCreate, CallHistoryList
+from app.domains.call.schemas import CallHistoryCreate, CallHistoryList, AudioUrlUpdate
 from app.domains.call.models.call_history import CallHistory
 from app.domains.call.crud import create_call_history as crud
 from app.domains.user.models.users import User
 from typing import List
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import aliased, selectinload
 
 
@@ -110,3 +110,16 @@ async def get_history_list(user: User, db: AsyncSession) -> List[CallHistoryList
         }
         for ch, p in rows
     ]
+
+
+async def update_audio_url(data: AudioUrlUpdate, db: AsyncSession) -> dict:
+    result = await db.execute(
+        update(CallHistory)
+        .where(CallHistory.room_name == data.room_name)
+        .values(recording_url=data.recording_url)
+        .execution_options(synchronize_session=False)
+    )
+
+    await db.commit()
+
+    return {"updated": int(result.rowcount or 0)}

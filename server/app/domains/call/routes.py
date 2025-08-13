@@ -10,10 +10,11 @@ from app.domains.auth.deps import get_current_user
 from app.domains.call.schemas import TokenRequest
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import get_db
-from app.domains.call.schemas import CallHistoryCreate
+from app.domains.call.schemas import CallHistoryCreate, AudioUrlUpdate
 from app.domains.call.services.livekit_service import (
     create_call_history_with_check,
     get_history_list,
+    update_audio_url
 )
 
 router = APIRouter()
@@ -46,6 +47,13 @@ async def record_call(
     history_data: CallHistoryCreate, db: AsyncSession = Depends(get_db)
 ):
     return await create_call_history_with_check(db, history_data)
+
+
+@router.put("/record")
+async def record_audio_url(
+    audio_data: AudioUrlUpdate, db: AsyncSession = Depends(get_db)
+):
+    return await update_audio_url(audio_data, db)
 
 
 @router.get("/history")

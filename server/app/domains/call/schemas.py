@@ -34,3 +34,7 @@ class CallHistoryList(BaseModel):
     ended_at: datetime
     duration_sec: int
     partner: PartnerInfo
+
+class AudioUrlUpdate(BaseModel):
+    room_name: str
+    recording_url: Optional[str] = None
