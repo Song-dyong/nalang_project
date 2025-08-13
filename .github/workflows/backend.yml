@@ -28,9 +28,6 @@ jobs:
             cd ~/nalang_project/server
             git fetch --all
             git reset --hard origin/main
-            if [ -f requirements.txt ]; then
-              ~/nalang_project/server/venv/bin/pip install -r requirements.txt
-            fi
             sudo systemctl restart fastapi
             sudo systemctl status fastapi --no-pager -l | head -n 50
             echo "🚀 FastAPI 서버 재시작 완료"
