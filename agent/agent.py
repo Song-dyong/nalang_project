@@ -82,7 +82,7 @@ async def entrypoint(ctx: JobContext):
     egress_req = api.RoomCompositeEgressRequest(
         room_name=room_name,
         audio_only=True,
-        options=api.EncodingOptions(
+        advanced=api.EncodingOptions(
             audio_codec=api.AudioCodec.OPUS,
             audio_bitrate=24000,
         ),
